@@ -352,9 +352,20 @@
 
     tg.BackButton.onClick(() => navigateTo('page-main'));
 
+    // Отправка данных: работает как из клавиатуры, так и из Menu Button
     function sendAction(action, data = {}) {
       if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-      tg.sendData(JSON.stringify({ action: action, ...data }));
+
+      const payload = {
+        action: action,
+        user_id: tg.initDataUnsafe?.user?.id,
+        ...data
+      };
+
+      try {
+        tg.sendData(JSON.stringify(payload));
+      } catch (e) {}
+
       tg.close();
     }
 
@@ -444,7 +455,7 @@
     }
 
     function toggleHero(hero) {
-      if (tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
+      if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
       const index = selectedHeroes.findIndex(h => h.name === hero.name);
       if (index > -1) {
         selectedHeroes.splice(index, 1);
