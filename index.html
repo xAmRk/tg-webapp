@@ -354,24 +354,35 @@
 
     tg.BackButton.onClick(() => navigateTo('page-main'));
 
-    function sendAction(action, data = {}) {
+    async function sendAction(action, data = {}) {
       if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
 
-      const user_id = tg.initDataUnsafe?.user?.id;
-      if (!user_id) {
-        tg.close();
-        return;
+      let userId = tg.initDataUnsafe?.user?.id;
+      if (!userId && tg.initData) {
+        try {
+          const params = new URLSearchParams(tg.initData);
+          const userObj = JSON.parse(params.get('user') || '{}');
+          userId = userObj.id;
+        } catch (e) {
+          console.error(e);
+        }
       }
 
-      fetch(SERVER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: action,
-          user_id: user_id,
-          ...data
-        })
-      }).catch(console.error);
+      try {
+        await fetch(SERVER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          keepalive: true,
+          body: JSON.stringify({
+            action: action,
+            user_id: userId,
+            init_data: tg.initData,
+            ...data
+          })
+        });
+      } catch (err) {
+        console.error("Fetch error:", err);
+      }
 
       tg.close();
     }
