@@ -265,7 +265,7 @@
         <div class="arrow">›</div>
       </div>
 
-      <div class="card-btn" onclick="sendAction('gw')">
+      <div class="card-btn" onclick="sendAction('quick_command', { command: '/find_today_gw' })">
         <div class="icon-box icon-amber">⚔️</div>
         <div class="content">
           <div class="title">Соперники ВГ</div>
@@ -274,7 +274,7 @@
         <div class="arrow">›</div>
       </div>
 
-      <div class="card-btn" onclick="sendAction('gc')">
+      <div class="card-btn" onclick="sendAction('quick_command', { command: '/find_today_gc' })">
         <div class="icon-box icon-purple">🏆</div>
         <div class="content">
           <div class="title">Соперники МС</div>
@@ -283,7 +283,7 @@
         <div class="arrow">›</div>
       </div>
 
-      <div class="card-btn" onclick="sendAction('retract')">
+      <div class="card-btn" onclick="sendAction('quick_command', { command: '/retract_all_trains' })">
         <div class="icon-box icon-red">🚫</div>
         <div class="content">
           <div class="title">Отменить тренировки</div>
@@ -292,7 +292,7 @@
         <div class="arrow">›</div>
       </div>
 
-      <div class="card-btn" onclick="sendAction('mode')">
+      <div class="card-btn" onclick="sendAction('quick_command', { command: '/change_mode' })">
         <div class="icon-box icon-blue">⚙️</div>
         <div class="content">
           <div class="title">Изменить настройки</div>
@@ -352,20 +352,9 @@
 
     tg.BackButton.onClick(() => navigateTo('page-main'));
 
-    // Отправка запроса с авто-закрытием
-    function sendAction(actionType, extraData = {}) {
+    function sendAction(action, data = {}) {
       if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-
-      const queryId = tg.initDataUnsafe?.query_id;
-      const user = tg.initDataUnsafe?.user;
-
-      // Закрываем окно сразу для плавности интерфейса
-      tg.close();
-
-      // Если есть query_id (Inline WebApp), отправляем мгновенный ответ
-      if (queryId) {
-        // Ответ через query_id
-      }
+      tg.sendData(JSON.stringify({ action: action, ...data }));
     }
 
     const HEROES = [
@@ -509,7 +498,7 @@
 
     submitBtn.addEventListener('click', () => {
       if (selectedHeroes.length !== 5) return;
-      sendAction('pack', { heroes: selectedHeroes.map(h => h.name) });
+      sendAction('find_pack', { heroes: selectedHeroes.map(h => h.name) });
     });
 
     renderHeroes();
