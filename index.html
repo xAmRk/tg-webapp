@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Панель управления</title>
+  <!-- Telegram Web App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: var(--tg-theme-bg-color, #0f172a);
+      --card-bg: var(--tg-theme-secondary-bg-color, #1e293b);
+      --text: var(--tg-theme-text-color, #f8fafc);
+      --hint: var(--tg-theme-hint-color, #94a3b8);
+      --btn-bg: var(--tg-theme-button-color, #3b82f6);
+      --btn-text: var(--tg-theme-button-text-color, #ffffff);
+      --accent: #38bdf8;
+      --hero-border: #334155;
+      --hero-border-active: #38bdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 16px;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    .page {
+      display: none;
+    }
+    .page.active {
+      display: block;
+    }
+
+    /* === Стили Главного Меню === */
+    .header {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .header h2 {
+      margin: 0 0 6px 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .header p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--hint);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .card-btn {
+      display: flex;
+      align-items: center;
+      background-color: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      text-align: left;
+      transition: transform 0.1s ease, filter 0.1s ease;
+    }
+    .card-btn:active {
+      transform: scale(0.98);
+      filter: brightness(0.9);
+    }
+    .icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-right: 14px;
+      flex-shrink: 0;
+    }
+    .icon-cyan   { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+    .icon-amber  { background: rgba(245, 158, 11, 0.15);  color: #f59e0b; }
+    .icon-purple { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+    .icon-red    { background: rgba(239, 68, 68, 0.15);  color: #ef4444; }
+    .icon-blue   { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    
+    .content { flex-grow: 1; }
+    .title { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+    .command { font-size: 12px; color: var(--hint); font-family: monospace; }
+    .arrow { color: var(--hint); font-size: 18px; margin-left: 8px; }
+
+    /* === Стили Экрана Выбора Героев === */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .back-btn {
+      background: var(--card-bg);
+      color: var(--accent);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+    }
+    .back-btn:active {
+      transform: scale(0.96);
+    }
+
+    .slots-container {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background-color: var(--bg);
+      padding-bottom: 10px;
+    }
+
+    .slots-title {
+      font-size: 13px;
+      color: var(--hint);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .slots-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .slot-item {
+      aspect-ratio: 1 / 1;
+      background-color: var(--card-bg);
+      border: 1.5px dashed var(--hero-border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--hint);
+    }
+
+    .slot-item.filled {
+      border: 2px solid var(--hero-border-active);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+    }
+
+    .slot-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .slot-item .slot-name {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 0, 0, 0.8);
+      font-size: 9px;
+      text-align: center;
+      padding: 1px 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #fff;
+    }
+
+    .search-box {
+      margin: 10px 0;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background-color: var(--card-bg);
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+    }
+
+    .heroes-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      padding-bottom: 85px;
+    }
+
+    .hero-card {
+      aspect-ratio: 1 / 1;
+      background-color: #111827;
+      border: 2px solid var(--hero-border);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      transition: transform 0.08s ease, border-color 0.15s ease;
+    }
+
+    .hero-card:active {
+      transform: scale(0.93);
+    }
+
+    .hero-card img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background-color: #1e293b;
+    }
+
+    .hero-card .hero-label {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.85);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      font-size: 9px;
+      font-weight: 600;
+      text-align: center;
+      padding: 2px 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hero-card.selected {
+      border: 2px solid #22c55e;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+    }
+
+    .hero-card.selected::after {
+      content: "✓";
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      background: #22c55e;
+      color: #fff;
+      font-size: 10px;
+      font-weight: bold;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+    }
+
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 16px;
+      background-color: var(--bg);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      background-color: var(--btn-bg);
+      color: var(--btn-text);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      opacity: 0.4;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .submit-btn.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= СТРАНИЦА 1: Главное Меню ================= -->
+  <div id="page-main" class="page active">
+    <div class="header">
+      <h2>Панель управления</h2>
+      <p>Выберите команду или действие</p>
+    </div>
+
+    <div class="grid">
+      <div class="card-btn" onclick="navigateTo('page-heroes')">
+        <div class="icon-box icon-cyan">🎯</div>
+        <div class="content">
+          <div class="title">Найти пак</div>
+          <div class="command">Выбор 5 персонажей</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="card-btn" onclick="sendQuickCommand('/find_today_gw', 'Соперники ВГ')">
+        <div class="icon-box icon-amber">⚔️</div>
+        <div class="content">
+          <div class="title">Соперники ВГ</div>
+          <div class="command">/find_today_gw</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="card-btn" onclick="sendQuickCommand('/find_today_gc', 'Соперники МС')">
+        <div class="icon-box icon-purple">🏆</div>
+        <div class="content">
+          <div class="title">Соперники МС</div>
+          <div class="command">/find_today_gc</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="card-btn" onclick="sendQuickCommand('/retract_all_trains', 'Отмена тренировок')">
+        <div class="icon-box icon-red">🚫</div>
+        <div class="content">
+          <div class="title">Отменить тренировки</div>
+          <div class="command">/retract_all_trains</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="card-btn" onclick="sendQuickCommand('/change_mode', 'Настройки')">
+        <div class="icon-box icon-blue">⚙️</div>
+        <div class="content">
+          <div class="title">Изменить настройки</div>
+          <div class="command">/change_mode</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= СТРАНИЦА 2: Выбор героев ================= -->
+  <div id="page-heroes" class="page">
+    <div class="slots-container">
+      <div class="top-nav">
+        <button class="back-btn" onclick="navigateTo('page-main')">
+          ‹ Меню
+        </button>
+        <div class="slots-title" style="flex-grow: 1;">
+          <span>Выбрано: <b id="count">0</b>/5</span>
+          <span id="resetBtn" style="cursor: pointer; color: #ef4444; display: none;">Сбросить</span>
+        </div>
+      </div>
+
+      <div class="slots-grid" id="slots">
+        <div class="slot-item">1</div>
+        <div class="slot-item">2</div>
+        <div class="slot-item">3</div>
+        <div class="slot-item">4</div>
+        <div class="slot-item">5</div>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Поиск героя...">
+    </div>
+
+    <div class="heroes-grid" id="heroesList"></div>
+
+    <div class="bottom-bar">
+      <button id="submitBtn" class="submit-btn">Найти пак (выберите 5)</button>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    function navigateTo(pageId) {
+      if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+
+      if (pageId === 'page-main') {
+        tg.BackButton.hide();
+      } else {
+        tg.BackButton.show();
+      }
+    }
+
+    tg.BackButton.onClick(() => navigateTo('page-main'));
+
+    function sendQuickCommand(cmd, label) {
+      if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+      tg.sendData(JSON.stringify({
+        action: "quick_command",
+        command: cmd,
+        label: label
+      }));
+      tg.close();
+    }
+
+    // Список персонажей с прямыми путями к вашей папке images/
+    const HEROES = [
+      { name: "Аврора",             img: "images/аврора.png" },
+      { name: "Айзек",              img: "images/айзек.png" },
+      { name: "Айрис",              img: "images/айрис.png" },
+      { name: "Альванор",           img: "images/альванор.png" },
+      { name: "Амира",              img: "images/амира.png" },
+      { name: "Андвари",            img: "images/андвари.png" },
+      { name: "Арахна",             img: "images/арахна.png" },
+      { name: "Артемис",            img: "images/артемис.png" },
+      { name: "Астарот",            img: "images/астарот.png" },
+      { name: "Астрид и Лукас",     img: "images/астрид и лукас.png" },
+      { name: "Безликий",           img: "images/безликий.png" },
+      { name: "Бирна",              img: "images/бирна.png" },
+      { name: "Галахад",            img: "images/галахад.png" },
+      { name: "Гелиос",             img: "images/гелиос.png" },
+      { name: "Гус",                img: "images/гус.png" },
+      { name: "Данте",              img: "images/данте.png" },
+      { name: "Джет",               img: "images/джет.png" },
+      { name: "Джинджер",           img: "images/джинджер.png" },
+      { name: "Джу",                img: "images/джу.png" },
+      { name: "Дориан",             img: "images/дориан.png" },
+      { name: "Дрейн",              img: "images/дрейн.png" },
+      { name: "Зири",               img: "images/зири.png" },
+      { name: "Исмаил",             img: "images/исмаил.png" },
+      { name: "Йорген",             img: "images/йорген.png" },
+      { name: "Кай",                img: "images/кай.png" },
+      { name: "Карх",               img: "images/карх.png" },
+      { name: "Каскад",             img: "images/каскад.png" },
+      { name: "Кейла",              img: "images/кейла.png" },
+      { name: "Кендл",              img: "images/кендл.png" },
+      { name: "Кира",               img: "images/кира.png" },
+      { name: "Корвус",             img: "images/корвус.png" },
+      { name: "Корнелиус",          img: "images/корнелиус.png" },
+      { name: "Криста",             img: "images/криста.png" },
+      { name: "Кроу",               img: "images/кроу.png" },
+      { name: "Ксеша",              img: "images/ксеша.png" },
+      { name: "Лара Крофт",         img: "images/лара крофт.png" },
+      { name: "Ларс",               img: "images/ларс.png" },
+      { name: "Леонель",            img: "images/леонель.png" },
+      { name: "Лилит",              img: "images/лилит.png" },
+      { name: "Лиэн",               img: "images/лиэн.png" },
+      { name: "Лютер",              img: "images/лютер.png" },
+      { name: "Майя",               img: "images/майя.png" },
+      { name: "Маркус",             img: "images/маркус.png" },
+      { name: "Марта",              img: "images/марта.png" },
+      { name: "Миу",                img: "images/миу.png" },
+      { name: "Моджо",              img: "images/моджо.png" },
+      { name: "Морриган",           img: "images/морриган.png" },
+      { name: "Муши и Шрум",        img: "images/муши и шрум.png" },
+      { name: "Небула",             img: "images/небула.png" },
+      { name: "Ойя",                img: "images/ойя.png" },
+      { name: "Октавия",            img: "images/октавия.png" },
+      { name: "Орион",              img: "images/орион.png" },
+      { name: "Пеппи",              img: "images/пеппи.png" },
+      { name: "Пич",                img: "images/пич.png" },
+      { name: "Полярис",            img: "images/полярис.png" },
+      { name: "Руфус",              img: "images/руфус.png" },
+      { name: "Сатори",             img: "images/сатори.png" }
+    ];
+
+    let selectedHeroes = [];
+    const heroesListEl = document.getElementById('heroesList');
+    const slotsEl = document.getElementById('slots');
+    const countEl = document.getElementById('count');
+    const resetBtn = document.getElementById('resetBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const searchInput = document.getElementById('searchInput');
+
+    function renderHeroes(filter = "") {
+      heroesListEl.innerHTML = "";
+      const filtered = HEROES.filter(h => h.name.toLowerCase().includes(filter.toLowerCase()));
+
+      filtered.forEach(hero => {
+        const isSelected = selectedHeroes.some(h => h.name === hero.name);
+        const card = document.createElement('div');
+        card.className = `hero-card ${isSelected ? 'selected' : ''}`;
+        card.innerHTML = `
+          <img src="${encodeURI(hero.img)}" alt="${hero.name}" loading="lazy">
+          <div class="hero-label">${hero.name}</div>
+        `;
+        card.onclick = () => toggleHero(hero);
+        heroesListEl.appendChild(card);
+      });
+    }
+
+    function toggleHero(hero) {
+      if (tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
+
+      const index = selectedHeroes.findIndex(h => h.name === hero.name);
+      if (index > -1) {
+        selectedHeroes.splice(index, 1);
+      } else {
+        if (selectedHeroes.length >= 5) {
+          if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+          return;
+        }
+        selectedHeroes.push(hero);
+      }
+      updateUI();
+    }
+
+    function updateUI() {
+      countEl.textContent = selectedHeroes.length;
+      resetBtn.style.display = selectedHeroes.length > 0 ? 'inline' : 'none';
+
+      const slots = slotsEl.children;
+      for (let i = 0; i < 5; i++) {
+        if (selectedHeroes[i]) {
+          const h = selectedHeroes[i];
+          slots[i].className = 'slot-item filled';
+          slots[i].innerHTML = `
+            <img src="${encodeURI(h.img)}" alt="${h.name}">
+            <div class="slot-name">${h.name}</div>
+          `;
+          slots[i].onclick = () => toggleHero(h);
+        } else {
+          slots[i].className = 'slot-item';
+          slots[i].innerHTML = `${i + 1}`;
+          slots[i].onclick = null;
+        }
+      }
+
+      if (selectedHeroes.length === 5) {
+        submitBtn.classList.add('active');
+        submitBtn.textContent = 'Найти пак ⚔️';
+      } else {
+        submitBtn.classList.remove('active');
+        submitBtn.textContent = `Найти пак (выбрано ${selectedHeroes.length}/5)`;
+      }
+
+      renderHeroes(searchInput.value);
+    }
+
+    searchInput.addEventListener('input', (e) => renderHeroes(e.target.value));
+
+    resetBtn.addEventListener('click', () => {
+      selectedHeroes = [];
+      updateUI();
+    });
+
+    submitBtn.addEventListener('click', () => {
+      if (selectedHeroes.length !== 5) return;
+      if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+
+      const heroNames = selectedHeroes.map(h => h.name);
+
+      tg.sendData(JSON.stringify({
+        action: "find_pack",
+        command: "/stp " + heroNames.join(" "),
+        heroes: heroNames
+      }));
+      tg.close();
+    });
+
+    renderHeroes();
+  </script>
+</body>
+</html>
