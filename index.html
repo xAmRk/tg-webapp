@@ -265,7 +265,7 @@
         <div class="arrow">›</div>
       </div>
 
-      <div class="card-btn" onclick="sendAction('/find_today_gw')">
+      <div class="card-btn" onclick="sendAction('quick_command', { command: '/find_today_gw' })">
         <div class="icon-box icon-amber">⚔️</div>
         <div class="content">
           <div class="title">Соперники ВГ</div>
@@ -274,7 +274,7 @@
         <div class="arrow">›</div>
       </div>
 
-      <div class="card-btn" onclick="sendAction('/find_today_gc')">
+      <div class="card-btn" onclick="sendAction('quick_command', { command: '/find_today_gc' })">
         <div class="icon-box icon-purple">🏆</div>
         <div class="content">
           <div class="title">Соперники МС</div>
@@ -283,7 +283,7 @@
         <div class="arrow">›</div>
       </div>
 
-      <div class="card-btn" onclick="sendAction('/retract_all_trains')">
+      <div class="card-btn" onclick="sendAction('quick_command', { command: '/retract_all_trains' })">
         <div class="icon-box icon-red">🚫</div>
         <div class="content">
           <div class="title">Отменить тренировки</div>
@@ -292,7 +292,7 @@
         <div class="arrow">›</div>
       </div>
 
-      <div class="card-btn" onclick="sendAction('/change_mode')">
+      <div class="card-btn" onclick="sendAction('quick_command', { command: '/change_mode' })">
         <div class="icon-box icon-blue">⚙️</div>
         <div class="content">
           <div class="title">Изменить настройки</div>
@@ -352,10 +352,9 @@
 
     tg.BackButton.onClick(() => navigateTo('page-main'));
 
-    function sendAction(cmdText) {
+    function sendAction(action, data = {}) {
       if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-      tg.switchInlineQuery(cmdText);
-      tg.close();
+      tg.sendData(JSON.stringify({ action: action, ...data }));
     }
 
     const HEROES = [
@@ -499,8 +498,7 @@
 
     submitBtn.addEventListener('click', () => {
       if (selectedHeroes.length !== 5) return;
-      const cmdText = '/stp ' + selectedHeroes.map(h => h.name).join(' ');
-      sendAction(cmdText);
+      sendAction('find_pack', { heroes: selectedHeroes.map(h => h.name) });
     });
 
     renderHeroes();
