@@ -1,9 +1,342 @@
-const tg = window.Telegram.WebApp;
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Панель управления</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: var(--tg-theme-bg-color, #0f172a);
+      --card-bg: var(--tg-theme-secondary-bg-color, #1e293b);
+      --text: var(--tg-theme-text-color, #f8fafc);
+      --hint: var(--tg-theme-hint-color, #94a3b8);
+      --btn-bg: var(--tg-theme-button-color, #3b82f6);
+      --btn-text: var(--tg-theme-button-text-color, #ffffff);
+      --accent: #38bdf8;
+      --hero-border: #334155;
+      --hero-border-active: #38bdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 16px;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .header { margin-bottom: 20px; text-align: center; }
+    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; }
+    .header p { margin: 0; font-size: 13px; color: var(--hint); }
+
+    .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .card-btn {
+      display: flex;
+      align-items: center;
+      background-color: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      text-align: left;
+      transition: transform 0.1s ease, filter 0.1s ease;
+    }
+    .card-btn:active { transform: scale(0.98); filter: brightness(0.9); }
+
+    .icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-right: 14px;
+      flex-shrink: 0;
+    }
+
+    .icon-cyan   { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+    .icon-amber  { background: rgba(245, 158, 11, 0.15);  color: #f59e0b; }
+    .icon-purple { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+    .icon-red    { background: rgba(239, 68, 68, 0.15);  color: #ef4444; }
+    .icon-blue   { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    
+    .content { flex-grow: 1; }
+    .title { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+    .command { font-size: 12px; color: var(--hint); font-family: monospace; }
+    .arrow { color: var(--hint); font-size: 18px; margin-left: 8px; }
+
+    .top-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .back-btn {
+      background: var(--card-bg);
+      color: var(--accent);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .back-btn:active { transform: scale(0.96); }
+
+    .slots-container {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background-color: var(--bg);
+      padding-bottom: 10px;
+    }
+
+    .slots-title {
+      font-size: 13px;
+      color: var(--hint);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .slots-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 8px; }
+    .slot-item {
+      aspect-ratio: 1 / 1;
+      background-color: var(--card-bg);
+      border: 1.5px dashed var(--hero-border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--hint);
+    }
+    .slot-item.filled {
+      border: 2px solid var(--hero-border-active);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+    }
+    .slot-item img { width: 100%; height: 100%; object-fit: cover; }
+    .slot-item .slot-name {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 0, 0, 0.8);
+      font-size: 9px;
+      text-align: center;
+      padding: 1px 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #fff;
+    }
+
+    .search-box { margin: 10px 0; }
+    .search-input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background-color: var(--card-bg);
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+    }
+
+    .heroes-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      padding-bottom: 85px;
+    }
+
+    .hero-card {
+      aspect-ratio: 1 / 1;
+      background-color: #111827;
+      border: 2px solid var(--hero-border);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      transition: transform 0.08s ease;
+    }
+    .hero-card:active { transform: scale(0.93); }
+    .hero-card img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background-color: #1e293b;
+    }
+    .hero-card .hero-label {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.85);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      font-size: 9px;
+      font-weight: 600;
+      text-align: center;
+      padding: 2px 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hero-card.selected {
+      border: 2px solid #22c55e;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+    }
+    .hero-card.selected::after {
+      content: "✓";
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      background: #22c55e;
+      color: #fff;
+      font-size: 10px;
+      font-weight: bold;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+    }
+
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 16px;
+      background-color: var(--bg);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      background-color: var(--btn-bg);
+      color: var(--btn-text);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      opacity: 0.4;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .submit-btn.active { opacity: 1; pointer-events: auto; }
+  </style>
+</head>
+<body>
+
+  <div id="page-main" class="page active">
+    <div class="header">
+      <h2>Панель управления</h2>
+      <p>Выберите команду или действие</p>
+    </div>
+
+    <div class="grid">
+      <div class="card-btn" onclick="navigateTo('page-heroes')">
+        <div class="icon-box icon-cyan">🎯</div>
+        <div class="content">
+          <div class="title">Найти пак</div>
+          <div class="command">Выбор 5 персонажей</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="card-btn" onclick="sendAction('/find_today_gw')">
+        <div class="icon-box icon-amber">⚔️</div>
+        <div class="content">
+          <div class="title">Соперники ВГ</div>
+          <div class="command">/find_today_gw</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="card-btn" onclick="sendAction('/find_today_gc')">
+        <div class="icon-box icon-purple">🏆</div>
+        <div class="content">
+          <div class="title">Соперники МС</div>
+          <div class="command">/find_today_gc</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="card-btn" onclick="sendAction('/retract_all_trains')">
+        <div class="icon-box icon-red">🚫</div>
+        <div class="content">
+          <div class="title">Отменить тренировки</div>
+          <div class="command">/retract_all_trains</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="card-btn" onclick="sendAction('/change_mode')">
+        <div class="icon-box icon-blue">⚙️</div>
+        <div class="content">
+          <div class="title">Изменить настройки</div>
+          <div class="command">/change_mode</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="page-heroes" class="page">
+    <div class="slots-container">
+      <div class="top-nav">
+        <button class="back-btn" onclick="navigateTo('page-main')">‹ Меню</button>
+        <div class="slots-title" style="flex-grow: 1;">
+          <span>Выбрано: <b id="count">0</b>/5</span>
+          <span id="resetBtn" style="cursor: pointer; color: #ef4444; display: none;">Сбросить</span>
+        </div>
+      </div>
+
+      <div class="slots-grid" id="slots">
+        <div class="slot-item">1</div>
+        <div class="slot-item">2</div>
+        <div class="slot-item">3</div>
+        <div class="slot-item">4</div>
+        <div class="slot-item">5</div>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Поиск героя...">
+    </div>
+
+    <div class="heroes-grid" id="heroesList"></div>
+
+    <div class="bottom-bar">
+      <button id="submitBtn" class="submit-btn">Найти пак (выберите 5)</button>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
-
-    // Юзернейм вашего бота
-    const BOT_USERNAME = "sverh_alpha_bot";
 
     function navigateTo(pageId) {
       if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
@@ -19,7 +352,6 @@ const tg = window.Telegram.WebApp;
 
     tg.BackButton.onClick(() => navigateTo('page-main'));
 
-    // Отправка команды в строку ввода чата с вашим ботом
     function sendAction(cmdText) {
       if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
       tg.switchInlineQuery(cmdText);
@@ -172,3 +504,6 @@ const tg = window.Telegram.WebApp;
     });
 
     renderHeroes();
+  </script>
+</body>
+</html>
