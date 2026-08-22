@@ -338,6 +338,8 @@
     tg.ready();
     tg.expand();
 
+    const SERVER_URL = "http://31.76.47.99:8088/api/webapp";
+
     function navigateTo(pageId) {
       if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -354,7 +356,26 @@
 
     function sendAction(action, data = {}) {
       if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-      tg.sendData(JSON.stringify({ action: action, ...data }));
+
+      const user_id = tg.initDataUnsafe?.user?.id;
+      if (!user_id) {
+        tg.close();
+        return;
+      }
+
+      const payload = {
+        action: action,
+        user_id: user_id,
+        ...data
+      };
+
+      fetch(SERVER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(e => console.error(e));
+
+      tg.close();
     }
 
     const HEROES = [
