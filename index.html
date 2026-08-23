@@ -309,19 +309,16 @@
       line-height: 14px;
     }
     
-    /* Шапка таблицы: hero-колонки черные, боковые синие */
     .th-side { background: #1e283a !important; color: #ffffff; font-weight: 600; font-size: 10px; text-transform: lowercase; }
     .th-hero { background: #000000 !important; color: #ffffff; font-weight: 600; font-size: 10px; text-transform: lowercase; }
 
-    /* Боковые колонки (name и power) ВСЕГДА _CELL_BG_COLOR (#1f4039) */
     .col-player { width: 28%; text-align: left; padding-left: 6px !important; background: #1f4039 !important; }
     .col-hero   { width: 12%; font-family: monospace; font-size: 10px; }
     .col-power  { width: 14%; font-family: monospace; font-size: 10.5px; font-weight: 700; background: #1f4039 !important; color: #ffffff !important; }
 
-    /* Фоны согласно ветке flag_random_table == 2 */
-    .hero-bg-loose { background: #3e3f39 !important; } /* marker == 1 (loose_color) */
-    .hero-bg-image { background: #1e283a !important; } /* marker == 0 (image_bg_color) */
-    .hero-bg-black { background: #000000 !important; } /* marker == 2 (asked_pack_color) */
+    .hero-bg-loose { background: #3e3f39 !important; }
+    .hero-bg-image { background: #1e283a !important; }
+    .hero-bg-black { background: #000000 !important; }
 
     .player-btn {
       display: block;
@@ -341,12 +338,35 @@
     .player-btn:active { color: #00ffff; }
     .player-btn.sent { color: #00ff00; }
 
-    /* Точные цвета текста реликвий из dict_titans_color */
-    .relic-10 { color: #ffffff !important; }                    /* Белый (1, 1, 1) */
-    .relic-11 { color: #00ff00 !important; font-weight: 600; }  /* Зеленый (0, 1, 0) */
-    .relic-12 { color: #00ffff !important; font-weight: 600; }  /* Бирюзовый (0, 1, 1) */
-    .relic-13 { color: #a534ff !important; font-weight: 600; }  /* Фиолетовый (0.647, 0.204, 1) */
-    .relic-14 { color: #ffa500 !important; font-weight: 700; }  /* Золотой (1, 0.647, 0) */
+    .relic-10 { color: #ffffff !important; }
+    .relic-11 { color: #00ff00 !important; font-weight: 600; }
+    .relic-12 { color: #00ffff !important; font-weight: 600; }
+    .relic-13 { color: #a534ff !important; font-weight: 600; }
+    .relic-14 { color: #ffa500 !important; font-weight: 700; }
+
+    /* Экран ВГ позиций */
+    .vg-targets-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+      padding-bottom: 24px;
+    }
+    .vg-target-btn {
+      background-color: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.15s ease;
+    }
+    .vg-target-btn:active { transform: scale(0.97); background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; }
   </style>
 </head>
 <body>
@@ -368,11 +388,11 @@
         <div class="arrow">›</div>
       </div>
 
-      <div class="card-btn" onclick="sendAction('quick_command', { command: '/find_today_gw' })">
+      <div class="card-btn" onclick="openTodayGwScreen()">
         <div class="icon-box icon-amber">⚔️</div>
         <div class="content">
           <div class="title">Соперники ВГ</div>
-          <div class="command">/find_today_gw</div>
+          <div class="command">Сетка позиций гильдии</div>
         </div>
         <div class="arrow">›</div>
       </div>
@@ -406,7 +426,23 @@
     </div>
   </div>
 
-  <!-- 2. Страница выбора героев -->
+  <!-- 2. Экран выбора соперников ВГ -->
+  <div id="page-vg-targets" class="page">
+    <div class="top-nav">
+      <button class="back-btn" onclick="navigateTo('page-main')">‹ Меню</button>
+      <div class="slots-title" style="flex-grow: 1;">
+        <span id="vgGuildTitle">⚔️ Соперники ВГ</span>
+      </div>
+    </div>
+
+    <div id="vgTargetsContent">
+      <div style="text-align: center; padding: 40px 0; color: var(--hint);">
+        Загрузка карты ВГ... ⏳
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Страница выбора героев -->
   <div id="page-heroes" class="page">
     <div class="slots-container">
       <div class="top-nav">
@@ -464,7 +500,7 @@
     </div>
   </div>
 
-  <!-- 3. Экран результатов -->
+  <!-- 4. Экран результатов STP -->
   <div id="page-results" class="page">
     <div class="top-nav">
       <button class="back-btn" onclick="navigateTo('page-heroes')">‹ К героям</button>
@@ -507,6 +543,9 @@
       if (tg?.BackButton) {
         if (pageId === 'page-main') {
           tg.BackButton.hide();
+        } else if (pageId === 'page-vg-targets') {
+          tg.BackButton.show();
+          tg.BackButton.onClick(() => navigateTo('page-main'));
         } else if (pageId === 'page-results') {
           tg.BackButton.show();
           tg.BackButton.onClick(() => navigateTo('page-heroes'));
@@ -548,6 +587,52 @@
         console.error("Fetch error:", err);
       }
       if (action === 'quick_command' && tg) tg.close();
+    }
+
+    // Загрузка экрана Соперников ВГ
+    async function openTodayGwScreen() {
+      navigateTo('page-vg-targets');
+      const container = document.getElementById('vgTargetsContent');
+      container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--hint);">Ищу гильдию соперника... ⏳</div>`;
+
+      try {
+        const response = await fetch(SERVER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'get_today_gw',
+            user_id: getUserId(),
+            init_data: tg?.initData || ''
+          })
+        });
+
+        const data = await response.json();
+        if (!data.ok) {
+          container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">${data.error || 'Ошибка загрузки ВГ'}</div>`;
+          return;
+        }
+
+        document.getElementById('vgGuildTitle').textContent = `⚔️ ${data.guild_name}`;
+        let html = `<div class="vg-targets-grid">`;
+        data.targets.forEach(t => {
+          html += `
+            <button class="vg-target-btn" onclick="selectVgTarget('${t.const_id}', '${t.kind}', '${t.guild_id}')">
+              <span>${t.text}</span>
+              <span>›</span>
+            </button>
+          `;
+        });
+        html += `</div>`;
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">Ошибка соединения с сервером</div>`;
+      }
+    }
+
+    async function selectVgTarget(constId, kind, guildId) {
+      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+      await sendAction('open_vg_player', { const_id: constId, kind: kind, guild_id: guildId });
+      if (tg) tg.close();
     }
 
     const HEROES = [
@@ -722,9 +807,9 @@
     }
 
     function getHeroBgClass(marker) {
-      if (marker === 1) return 'hero-bg-loose'; // loose_color (62, 63, 57)
-      if (marker === 0) return 'hero-bg-image'; // image_bg_color (30, 40, 58)
-      if (marker === 2) return 'hero-bg-black'; // asked_pack_color (0, 0, 0)
+      if (marker === 1) return 'hero-bg-loose';
+      if (marker === 0) return 'hero-bg-image';
+      if (marker === 2) return 'hero-bg-black';
       return 'hero-bg-image';
     }
 
