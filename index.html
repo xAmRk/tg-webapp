@@ -283,7 +283,7 @@
     }
     .submit-btn.active { opacity: 1; pointer-events: auto; }
 
-    /* Таблица 1-в-1 по стилю оригинальной картинки бота */
+    /* Таблица результатов */
     .table-container {
       width: 100%;
       background-color: #1e283a;
@@ -316,21 +316,16 @@
       text-transform: lowercase;
     }
     
-    .col-player { width: 28%; text-align: left; padding-left: 6px !important; }
+    /* Ники и общая мощь — ВСЕГДА постоянный зеленый фон (_CELL_BG_COLOR) */
+    .col-player { width: 28%; text-align: left; padding-left: 6px !important; background: #1f4039 !important; }
     .col-hero   { width: 12%; font-family: monospace; font-size: 10px; }
-    .col-power  { width: 14%; font-family: monospace; font-size: 10.5px; font-weight: 700; }
+    .col-power  { width: 14%; font-family: monospace; font-size: 10.5px; font-weight: 700; background: #1f4039 !important; color: #ffffff !important; }
 
-    /* Точные фоны */
-    .cell-player-full { background: #1f4039 !important; }
-    .cell-player-part { background: #1e283a !important; }
-
-    .cell-bg-0 { background: #1e283a !important; } /* Стандартная мощь */
-    .cell-bg-1 { background: #1e283a !important; } /* Высокая мощь */
-    .cell-bg-2 { background: #000000 !important; } /* Низкая мощь (<150к) */
-    .cell-bg-empty { background: #1e283a !important; }
-
-    .cell-power-full { background: #1f4039 !important; color: #ffffff !important; }
-    .cell-power-part { background: #1e283a !important; color: #00ffff !important; }
+    /* Фоны ячеек персонажей */
+    .hero-bg-green { background: #1f4039 !important; } /* Топ паки для тренировки */
+    .hero-bg-gray  { background: #2d3748 !important; } /* Достаточная прокачка (>190к) */
+    .hero-bg-black { background: #000000 !important; } /* Слабая прокачка (<150к) */
+    .hero-bg-base  { background: #1e283a !important; } /* Обычный/пустой фон */
 
     .player-btn {
       display: block;
@@ -350,7 +345,7 @@
     .player-btn:active { color: #00ffff; }
     .player-btn.sent { color: #00ff00; }
 
-    /* Цвета текста реликвий */
+    /* Точные цвета текста реликвий */
     .relic-10 { color: #ffffff !important; }                    /* Белый */
     .relic-11 { color: #00ff00 !important; font-weight: 600; }  /* Зеленый */
     .relic-12 { color: #00ffff !important; font-weight: 600; }  /* Бирюзовый */
@@ -730,10 +725,18 @@
       renderHeroes(searchInput.value);
     }
 
-    function fmtPower(val, relicCode, bgColor) {
-      if (!val || val === 0) return { text: '', cls: '', bgCls: 'cell-bg-empty' };
+    function getHeroBgClass(playerIdx, pw, bgColor) {
+      if (!pw || pw === 0) return 'hero-bg-base';
+      if (playerIdx < 7) return 'hero-bg-green';   // Топ паков под тренировку
+      if (bgColor === 2 || pw < 150000) return 'hero-bg-black'; // Слабая прокачка (<150к)
+      if (bgColor === 1 || pw > 190000) return 'hero-bg-gray';  // Достаточная прокачка (>190к)
+      return 'hero-bg-base';
+    }
+
+    function fmtPower(val, relicCode, bgColor, playerIdx) {
+      if (!val || val === 0) return { text: '', cls: '', bgCls: 'hero-bg-base' };
       let cls = `relic-${relicCode || 10}`;
-      let bgCls = `cell-bg-${bgColor !== undefined ? bgColor : 0}`;
+      let bgCls = getHeroBgClass(playerIdx, val, bgColor);
       let text = (val / 1000).toFixed(0) + 'к';
       return { text, cls, bgCls };
     }
@@ -796,14 +799,9 @@
       `;
 
       players.forEach((p, idx) => {
-        // Зеленый фон ставится для первых участников с полным паком
-        const isTopFullPack = p.has_full_pack && idx < 7;
-        const playerCellBg = isTopFullPack ? 'cell-player-full' : 'cell-player-part';
-        const powerCellBg  = isTopFullPack ? 'cell-power-full'  : 'cell-power-part';
-
         html += `
           <tr>
-            <td class="col-player ${playerCellBg}">
+            <td class="col-player">
               <button class="player-btn" id="btn-player-${idx}" onclick="requestTraining('${uid}', '${p.const_id}', '${p.nickname}', ${idx})">
                 ${p.nickname}
               </button>
@@ -811,10 +809,10 @@
             ${p.powers.map((pw, hIdx) => {
               const relicCode = p.relic_colors ? p.relic_colors[hIdx] : 10;
               const bgColor = p.bg_colors ? p.bg_colors[hIdx] : 0;
-              const f = fmtPower(pw, relicCode, bgColor);
+              const f = fmtPower(pw, relicCode, bgColor, idx);
               return `<td class="col-hero ${f.cls} ${f.bgCls}">${f.text}</td>`;
             }).join('')}
-            <td class="col-power ${powerCellBg}">${fmtTotal(p.total_power)}</td>
+            <td class="col-power">${fmtTotal(p.total_power)}</td>
           </tr>
         `;
       });
