@@ -283,12 +283,12 @@
     }
     .submit-btn.active { opacity: 1; pointer-events: auto; }
 
-    /* Таблица результатов */
+    /* Таблица в точности по стилям оригинального Hero Wars */
     .table-container {
       width: 100%;
-      background-color: var(--card-bg);
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background-color: #0c1222;
+      border-radius: 10px;
+      border: 1px solid #1e293b;
       margin-top: 8px;
       padding-bottom: 20px;
     }
@@ -300,31 +300,29 @@
       text-align: center;
     }
     table.result-table th, table.result-table td {
-      padding: 7px 2px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 6px 2px;
+      border: 1px solid #162032;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     table.result-table th {
-      background: rgba(15, 23, 42, 0.9);
-      color: var(--hint);
+      background: #0f172a;
+      color: #94a3b8;
       font-weight: 600;
       font-size: 10px;
-      text-transform: capitalize;
+      text-transform: lowercase;
     }
     .col-player { width: 28%; text-align: left; padding-left: 6px !important; }
     .col-hero   { width: 12%; font-family: monospace; font-size: 10.5px; }
-    .col-power  { width: 14%; font-family: monospace; font-size: 11px; font-weight: 700; }
+    .col-power  { width: 14%; font-family: monospace; font-size: 11px; font-weight: 700; color: #38bdf8; }
 
     .player-btn {
       display: block;
       width: 100%;
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      color: #38bdf8;
-      border-radius: 6px;
-      padding: 5px 4px;
+      background: transparent;
+      border: none;
+      color: #f8fafc;
       font-size: 11px;
       font-weight: 600;
       text-align: left;
@@ -332,23 +330,24 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      transition: all 0.15s ease;
+      padding: 2px 0;
     }
-    .player-btn:active { transform: scale(0.96); background: rgba(56, 189, 248, 0.25); }
-    .player-btn.sent {
-      background: rgba(34, 197, 94, 0.2);
-      border-color: #22c55e;
-      color: #22c55e;
-    }
+    .player-btn:active { color: #38bdf8; }
+    .player-btn.sent { color: #22c55e; }
 
-    /* Цвета реликвий (по таблице Hero Wars) */
-    .relic-none   { color: #ffffff; }                    /* Без реликвии (белый) */
-    .relic-green  { color: #22c55e; font-weight: 600; }  /* 1-9 (зеленый) */
-    .relic-blue   { color: #38bdf8; font-weight: 600; }  /* 10-19 (синий) */
-    .relic-purple { color: #c084fc; font-weight: 600; }  /* 20-29 (фиолетовый) */
-    .relic-gold   { color: #fbbf24; font-weight: 700; }  /* 30 (золотой) */
-    .relic-dim    { color: #475569; }                    /* Нет героя */
-    .p-total      { color: #f8fafc; }
+    /* Фон строки для соклановцев с полным паком (зеленоватый) */
+    tr.full-pack { background: rgba(22, 101, 52, 0.25); }
+
+    /* Фон темной плашки для героев с мощью < 150 000 */
+    .bg-dark { background-color: #000000 !important; }
+
+    /* Точные цвета реликвий из SQL-запроса */
+    .relic-10 { color: #ffffff !important; }                    /* Без реликвии / белый */
+    .relic-11 { color: #22c55e !important; font-weight: 600; }  /* 1-9 / зеленый */
+    .relic-12 { color: #00ffff !important; font-weight: 600; }  /* 10-19 / бирюзовый (cyan) */
+    .relic-13 { color: #c084fc !important; font-weight: 600; }  /* 20-29 / фиолетовый */
+    .relic-14 { color: #f59e0b !important; font-weight: 700; }  /* 30 / золотой (оранжевый) */
+    .relic-dim { color: #334155 !important; }                   /* Нет героя */
   </style>
 </head>
 <body>
@@ -723,20 +722,12 @@
       renderHeroes(searchInput.value);
     }
 
-    function getRelicColorClass(relic) {
-      if (!relic || relic === 0) return 'relic-none';
-      if (relic >= 1 && relic <= 9) return 'relic-green';
-      if (relic >= 10 && relic <= 19) return 'relic-blue';
-      if (relic >= 20 && relic <= 29) return 'relic-purple';
-      if (relic >= 30) return 'relic-gold';
-      return 'relic-none';
-    }
-
-    function fmtPower(val, relic) {
-      if (!val || val === 0) return { text: '—', cls: 'relic-dim' };
-      let cls = getRelicColorClass(relic);
+    function fmtPower(val, relicCode, bgColor) {
+      if (!val || val === 0) return { text: '', cls: 'relic-dim', bgCls: '' };
+      let cls = `relic-${relicCode || 10}`;
+      let bgCls = bgColor === 2 ? 'bg-dark' : '';
       let text = (val / 1000).toFixed(0) + 'к';
-      return { text, cls };
+      return { text, cls, bgCls };
     }
 
     function fmtTotal(val) {
@@ -788,28 +779,30 @@
           <table class="result-table">
             <thead>
               <tr>
-                <th class="col-player">Игрок</th>
+                <th class="col-player">name</th>
                 ${heroes.map(h => `<th class="col-hero">${h}</th>`).join('')}
-                <th class="col-power">Мощь</th>
+                <th class="col-power">power</th>
               </tr>
             </thead>
             <tbody>
       `;
 
       players.forEach((p, idx) => {
+        const rowClass = p.has_full_pack ? 'full-pack' : '';
         html += `
-          <tr>
+          <tr class="${rowClass}">
             <td class="col-player">
               <button class="player-btn" id="btn-player-${idx}" onclick="requestTraining('${uid}', '${p.const_id}', '${p.nickname}', ${idx})">
-                ⚔️ ${p.nickname}
+                ${p.nickname}
               </button>
             </td>
             ${p.powers.map((pw, hIdx) => {
-              const relic = p.relics ? p.relics[hIdx] : 0;
-              const f = fmtPower(pw, relic);
-              return `<td class="col-hero ${f.cls}">${f.text}</td>`;
+              const relicCode = p.relic_codes ? p.relic_codes[hIdx] : 10;
+              const bgColor = p.bg_colors ? p.bg_colors[hIdx] : 0;
+              const f = fmtPower(pw, relicCode, bgColor);
+              return `<td class="col-hero ${f.cls} ${f.bgCls}">${f.text}</td>`;
             }).join('')}
-            <td class="col-power p-total">${fmtTotal(p.total_power)}</td>
+            <td class="col-power">${fmtTotal(p.total_power)}</td>
           </tr>
         `;
       });
