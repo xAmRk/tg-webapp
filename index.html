@@ -152,7 +152,6 @@
       outline: none;
     }
 
-    /* Идеальная симметричная сетка 4 x 2 для классов */
     .class-filters-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -176,23 +175,10 @@
       transition: all 0.15s ease;
       white-space: nowrap;
     }
-
     .filter-chip:active { transform: scale(0.96); }
+    .filter-chip .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .filter-chip.active { border-color: rgba(255, 255, 255, 0.3); color: #ffffff; }
 
-    .filter-chip .chip-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .filter-chip.active {
-      border-color: rgba(255, 255, 255, 0.3);
-      color: #ffffff;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-    }
-
-    /* Индивидуальные стили активных классов */
     .filter-chip[data-class="all"].active      { background: #3b82f6; border-color: #60a5fa; }
     .filter-chip[data-class="Контроль"].active { background: #0284c7; border-color: #38bdf8; }
     .filter-chip[data-class="Целитель"].active { background: #16a34a; border-color: #4ade80; }
@@ -296,10 +282,68 @@
       transition: opacity 0.2s;
     }
     .submit-btn.active { opacity: 1; pointer-events: auto; }
+
+    /* Таблица результатов */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      margin-top: 10px;
+    }
+    table.result-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      text-align: center;
+    }
+    table.result-table th, table.result-table td {
+      padding: 7px 4px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      white-space: nowrap;
+    }
+    table.result-table th {
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--hint);
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+    table.result-table tr:hover { background: rgba(255, 255, 255, 0.03); }
+    .player-row { cursor: pointer; transition: background 0.15s; }
+    .player-row:active { background: rgba(56, 189, 248, 0.15); }
+    .player-name-cell {
+      text-align: left;
+      font-weight: 600;
+      color: #38bdf8;
+      padding-left: 10px !important;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .p-green { color: #22c55e; font-weight: 600; }
+    .p-cyan { color: #38bdf8; font-weight: 600; }
+    .p-dim { color: #64748b; }
+    .p-total { font-weight: 700; color: #f8fafc; }
+    .train-req-btn {
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .train-req-btn.sent {
+      background: #22c55e;
+    }
   </style>
 </head>
 <body>
 
+  <!-- 1. Главная страница -->
   <div id="page-main" class="page active">
     <div class="header">
       <h2>Панель управления</h2>
@@ -354,6 +398,7 @@
     </div>
   </div>
 
+  <!-- 2. Страница выбора героев -->
   <div id="page-heroes" class="page">
     <div class="slots-container">
       <div class="top-nav">
@@ -377,7 +422,6 @@
       <input type="text" id="searchInput" class="search-input" placeholder="🔍 Поиск героя...">
     </div>
 
-    <!-- Идеально выверенная сетка 4 x 2 -->
     <div class="class-filters-grid" id="classFilters">
       <div class="filter-chip active" data-class="all" onclick="setClassFilter('all')">
         <span class="chip-dot" style="background: #38bdf8;"></span> Все
@@ -412,6 +456,22 @@
     </div>
   </div>
 
+  <!-- 3. Новая страница интерактивных результатов -->
+  <div id="page-results" class="page">
+    <div class="top-nav">
+      <button class="back-btn" onclick="navigateTo('page-heroes')">‹ К героям</button>
+      <div class="slots-title" style="flex-grow: 1;">
+        <span>📊 Результаты подбора</span>
+      </div>
+    </div>
+
+    <div id="resultsContent">
+      <div style="text-align: center; padding: 40px 0; color: var(--hint);">
+        Загрузка данных... ⏳
+      </div>
+    </div>
+  </div>
+
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(console.error);
@@ -438,19 +498,17 @@
       if (tg?.BackButton) {
         if (pageId === 'page-main') {
           tg.BackButton.hide();
+        } else if (pageId === 'page-results') {
+          tg.BackButton.show();
+          tg.BackButton.onClick(() => navigateTo('page-heroes'));
         } else {
           tg.BackButton.show();
+          tg.BackButton.onClick(() => navigateTo('page-main'));
         }
       }
     }
 
-    if (tg?.BackButton) {
-      tg.BackButton.onClick(() => navigateTo('page-main'));
-    }
-
-    async function sendAction(action, data = {}) {
-      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-
+    function getUserId() {
       let userId = tg?.initDataUnsafe?.user?.id;
       if (!userId && tg?.initData) {
         try {
@@ -461,15 +519,18 @@
           console.error(e);
         }
       }
+      return userId || 0;
+    }
 
+    async function sendAction(action, data = {}) {
+      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
       try {
         await fetch(SERVER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          keepalive: true,
           body: JSON.stringify({
             action: action,
-            user_id: userId,
+            user_id: getUserId(),
             init_data: tg?.initData || '',
             ...data
           })
@@ -477,8 +538,7 @@
       } catch (err) {
         console.error("Fetch error:", err);
       }
-
-      if (tg) tg.close();
+      if (action === 'quick_command' && tg) tg.close();
     }
 
     const HEROES = [
@@ -578,17 +638,14 @@
     function setClassFilter(className) {
       if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
       currentClassFilter = className;
-      
       document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
       const activeBtn = document.querySelector(`.filter-chip[data-class="${className}"]`);
       if (activeBtn) activeBtn.classList.add('active');
-
       renderHeroes(searchInput.value);
     }
 
     function renderHeroes(filterText = "") {
       heroesListEl.innerHTML = "";
-      
       const filtered = HEROES.filter(h => {
         const matchesName = h.name.toLowerCase().includes(filterText.toLowerCase());
         const matchesClass = (currentClassFilter === 'all') || (h.classes && h.classes.includes(currentClassFilter));
@@ -655,6 +712,111 @@
       renderHeroes(searchInput.value);
     }
 
+    // Запрос таблицы и рендер интерактивного экрана
+    async function searchPackTable() {
+      if (selectedHeroes.length !== 5) return;
+      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+
+      navigateTo('page-results');
+      const container = document.getElementById('resultsContent');
+      container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--hint);">Ищу соклановцев в базе... ⏳</div>`;
+
+      try {
+        const response = await fetch(SERVER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'find_pack_data',
+            user_id: getUserId(),
+            init_data: tg?.initData || '',
+            heroes: selectedHeroes.map(h => h.name)
+          })
+        });
+
+        const data = await response.json();
+        if (!data.ok) {
+          container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">Ошибка: ${data.error || 'Не удалось получить данные'}</div>`;
+          return;
+        }
+
+        renderResultTable(data);
+      } catch (e) {
+        container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">Ошибка соединения с сервером</div>`;
+      }
+    }
+
+    function renderResultTable(data) {
+      const container = document.getElementById('resultsContent');
+      const heroes = data.heroes;
+      const players = data.players;
+      const uid = data.uid;
+
+      let html = `
+        <div class="table-container">
+          <table class="result-table">
+            <thead>
+              <tr>
+                <th style="text-align: left; padding-left: 10px;">Игрок</th>
+                ${heroes.map(h => `<th>${h}</th>`).join('')}
+                <th>Мощь</th>
+                <th>Запрос</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      players.forEach((p, idx) => {
+        html += `
+          <tr class="player-row">
+            <td class="player-name-cell">${p.nickname}</td>
+            ${p.powers.map(pw => {
+              if (!pw) return `<td class="p-dim">—</td>`;
+              let cls = pw > 190000 ? 'p-green' : (pw > 150000 ? 'p-cyan' : '');
+              return `<td class="${cls}">${pw.toLocaleString()}</td>`;
+            }).join('')}
+            <td class="p-total">${p.total_power.toLocaleString()}</td>
+            <td>
+              <button class="train-req-btn" id="btn-train-${idx}" onclick="requestTraining('${uid}', '${p.const_id}', ${idx})">⚔️ Треня</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    async function requestTraining(uid, receiverConstId, btnIndex) {
+      const btn = document.getElementById(`btn-train-${btnIndex}`);
+      if (btn) {
+        btn.textContent = "✓ Запрошено";
+        btn.classList.add('sent');
+        btn.disabled = true;
+      }
+      if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+
+      try {
+        await fetch(SERVER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'request_train',
+            user_id: getUserId(),
+            init_data: tg?.initData || '',
+            uid: uid,
+            receiver_const_id: receiverConstId
+          })
+        });
+      } catch (err) {
+        console.error("Ошибка отправки запроса тренировки:", err);
+      }
+    }
+
     searchInput.addEventListener('input', (e) => renderHeroes(e.target.value));
 
     resetBtn.addEventListener('click', () => {
@@ -662,10 +824,7 @@
       updateUI();
     });
 
-    submitBtn.addEventListener('click', () => {
-      if (selectedHeroes.length !== 5) return;
-      sendAction('find_pack', { heroes: selectedHeroes.map(h => h.name) });
-    });
+    submitBtn.addEventListener('click', searchPackTable);
 
     // Первичный рендер
     renderHeroes();
