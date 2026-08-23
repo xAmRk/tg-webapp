@@ -532,7 +532,7 @@
     </div>
   </div>
 
-  <!-- 3. Экран просмотра карточек позиции ВГ -->
+  <!-- 3. Экран просмотра карточки позиции ВГ -->
   <div id="page-card-view" class="page">
     <div class="top-nav">
       <button class="back-btn" onclick="navigateTo('page-vg-targets')">‹ К позициям</button>
@@ -611,7 +611,7 @@
         <span class="chip-dot" style="background: #60a5fa;"></span> Танк
       </div>
       <div class="filter-chip" data-class="Боец" onclick="setClassFilter('Боец')">
-        <span class="chip-dot" style="background: #fb923c;"></span> Боец
+        <span class="chip-dot" style="background: #ea580c; border-color: #fb923c;"></span> Боец
       </div>
     </div>
 
@@ -918,8 +918,10 @@
         });
 
         const data = await response.json();
-        if (data.ok && (data.images?.length > 0 || data.messages?.length > 0)) {
-          renderBattleSearchPayload(data);
+        if (data.ok) {
+          if (data.images && data.images.length > 0) {
+            renderBattleSearchPayload(data);
+          }
         }
       } catch (e) {
         console.error(e);
