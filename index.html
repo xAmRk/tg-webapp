@@ -283,7 +283,7 @@
     }
     .submit-btn.active { opacity: 1; pointer-events: auto; }
 
-    /* Таблица результатов без прокрутки */
+    /* Таблица результатов */
     .table-container {
       width: 100%;
       background-color: var(--card-bg);
@@ -341,11 +341,14 @@
       color: #22c55e;
     }
 
-    .p-green { color: #22c55e; font-weight: 700; }
-    .p-cyan { color: #38bdf8; font-weight: 600; }
-    .p-white { color: #f8fafc; }
-    .p-dim { color: #475569; }
-    .p-total { color: #f8fafc; }
+    /* Цвета реликвий (по таблице Hero Wars) */
+    .relic-none   { color: #ffffff; }                    /* Без реликвии (белый) */
+    .relic-green  { color: #22c55e; font-weight: 600; }  /* 1-9 (зеленый) */
+    .relic-blue   { color: #38bdf8; font-weight: 600; }  /* 10-19 (синий) */
+    .relic-purple { color: #c084fc; font-weight: 600; }  /* 20-29 (фиолетовый) */
+    .relic-gold   { color: #fbbf24; font-weight: 700; }  /* 30 (золотой) */
+    .relic-dim    { color: #475569; }                    /* Нет героя */
+    .p-total      { color: #f8fafc; }
   </style>
 </head>
 <body>
@@ -463,7 +466,7 @@
     </div>
   </div>
 
-  <!-- 3. Экран результатов без горизонтального скролла -->
+  <!-- 3. Экран результатов -->
   <div id="page-results" class="page">
     <div class="top-nav">
       <button class="back-btn" onclick="navigateTo('page-heroes')">‹ К героям</button>
@@ -720,9 +723,18 @@
       renderHeroes(searchInput.value);
     }
 
-    function fmtPower(val) {
-      if (!val || val === 0) return { text: '—', cls: 'p-dim' };
-      let cls = val > 190000 ? 'p-green' : (val > 150000 ? 'p-cyan' : 'p-white');
+    function getRelicColorClass(relic) {
+      if (!relic || relic === 0) return 'relic-none';
+      if (relic >= 1 && relic <= 9) return 'relic-green';
+      if (relic >= 10 && relic <= 19) return 'relic-blue';
+      if (relic >= 20 && relic <= 29) return 'relic-purple';
+      if (relic >= 30) return 'relic-gold';
+      return 'relic-none';
+    }
+
+    function fmtPower(val, relic) {
+      if (!val || val === 0) return { text: '—', cls: 'relic-dim' };
+      let cls = getRelicColorClass(relic);
       let text = (val / 1000).toFixed(0) + 'к';
       return { text, cls };
     }
@@ -792,8 +804,9 @@
                 ⚔️ ${p.nickname}
               </button>
             </td>
-            ${p.powers.map(pw => {
-              const f = fmtPower(pw);
+            ${p.powers.map((pw, hIdx) => {
+              const relic = p.relics ? p.relics[hIdx] : 0;
+              const f = fmtPower(pw, relic);
               return `<td class="col-hero ${f.cls}">${f.text}</td>`;
             }).join('')}
             <td class="col-power p-total">${fmtTotal(p.total_power)}</td>
