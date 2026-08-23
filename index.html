@@ -219,7 +219,7 @@
       object-fit: cover;
       background-color: #1e293b;
     }
-    .hero-label {
+    .hero-card .hero-label {
       position: relative;
       z-index: 2;
       width: 100%;
@@ -406,57 +406,6 @@
       justify-content: center;
       padding: 12px;
     }
-
-    /* Экран просмотра карточек боя */
-    .card-view-container {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding-bottom: 30px;
-    }
-    .card-view-img {
-      width: 100%;
-      height: auto;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-      display: block;
-    }
-    
-    /* Клавиатура кнопок в точности по рядам бота */
-    .card-kb-container {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-top: 10px;
-      background: #111827;
-      padding: 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .card-kb-row {
-      display: flex;
-      gap: 6px;
-      width: 100%;
-    }
-    .card-action-btn {
-      flex: 1;
-      background: #1e293b;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #f8fafc;
-      border-radius: 8px;
-      padding: 9px 2px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      transition: all 0.15s ease;
-    }
-    .card-action-btn:active { background: #38bdf8; color: #0f172a; transform: scale(0.96); }
-    .card-action-btn.sent { background: #22c55e; border-color: #22c55e; color: #fff; }
   </style>
 </head>
 <body>
@@ -532,39 +481,7 @@
     </div>
   </div>
 
-  <!-- 3. Экран просмотра карточки позиции ВГ -->
-  <div id="page-card-view" class="page">
-    <div class="top-nav">
-      <button class="back-btn" onclick="navigateTo('page-vg-targets')">‹ К позициям</button>
-      <div class="slots-title" style="flex-grow: 1;">
-        <span id="cardViewTitle">Карточка позиции</span>
-      </div>
-    </div>
-
-    <div id="cardViewContent">
-      <div style="text-align: center; padding: 40px 0; color: var(--hint);">
-        Формирование карточек... ⏳
-      </div>
-    </div>
-  </div>
-
-  <!-- 4. Экран просмотра таблиц vdr / vgsf / поиска боев -->
-  <div id="page-battle-search" class="page">
-    <div class="top-nav">
-      <button class="back-btn" onclick="navigateTo('page-card-view')">‹ К карточке</button>
-      <div class="slots-title" style="flex-grow: 1;">
-        <span id="battleSearchTitle">Поиск боев</span>
-      </div>
-    </div>
-
-    <div id="battleSearchContent">
-      <div style="text-align: center; padding: 40px 0; color: var(--hint);">
-        Загрузка таблицы боев... ⏳
-      </div>
-    </div>
-  </div>
-
-  <!-- 5. Страница выбора героев STP -->
+  <!-- 3. Страница выбора героев -->
   <div id="page-heroes" class="page">
     <div class="slots-container">
       <div class="top-nav">
@@ -611,7 +528,7 @@
         <span class="chip-dot" style="background: #60a5fa;"></span> Танк
       </div>
       <div class="filter-chip" data-class="Боец" onclick="setClassFilter('Боец')">
-        <span class="chip-dot" style="background: #ea580c; border-color: #fb923c;"></span> Боец
+        <span class="chip-dot" style="background: #fb923c;"></span> Боец
       </div>
     </div>
 
@@ -622,7 +539,7 @@
     </div>
   </div>
 
-  <!-- 6. Экран результатов STP -->
+  <!-- 4. Экран результатов STP -->
   <div id="page-results" class="page">
     <div class="top-nav">
       <button class="back-btn" onclick="navigateTo('page-heroes')">‹ К героям</button>
@@ -668,12 +585,6 @@
         } else if (pageId === 'page-vg-targets') {
           tg.BackButton.show();
           tg.BackButton.onClick(() => navigateTo('page-main'));
-        } else if (pageId === 'page-card-view') {
-          tg.BackButton.show();
-          tg.BackButton.onClick(() => navigateTo('page-vg-targets'));
-        } else if (pageId === 'page-battle-search') {
-          tg.BackButton.show();
-          tg.BackButton.onClick(() => navigateTo('page-card-view'));
         } else if (pageId === 'page-results') {
           tg.BackButton.show();
           tg.BackButton.onClick(() => navigateTo('page-heroes'));
@@ -756,7 +667,7 @@
 
         if (t1 && (t1.is_last_attacks || t1.text === "My last attacks")) {
           html += `
-            <div class="vg-card-slot vg-single-btn" onclick="openVgCard('', 'hero', '${t1.guild_id}', true, 'My last attacks')">
+            <div class="vg-card-slot vg-single-btn" onclick="selectVgTarget('', 'hero', '${t1.guild_id}', true)">
               <span style="font-weight: 700; color: #38bdf8;">📊 ${t1.text}</span>
             </div>
           `;
@@ -769,7 +680,7 @@
 
         html += `<div class="vg-row-pair">`;
         html += `
-          <div class="vg-card-slot" onclick="openVgCard('${t1.const_id}', '${t1.kind}', '${t1.guild_id}', false, '${t1.text}')">
+          <div class="vg-card-slot" onclick="selectVgTarget('${t1.const_id}', '${t1.kind}', '${t1.guild_id}', false)">
             <span class="vg-badge">${slot1}</span>
             <span class="vg-name">${nick1}</span>
           </div>
@@ -777,7 +688,7 @@
 
         if (t2) {
           html += `
-            <div class="vg-card-slot" onclick="openVgCard('${t2.const_id}', '${t2.kind}', '${t2.guild_id}', false, '${t2.text}')">
+            <div class="vg-card-slot" onclick="selectVgTarget('${t2.const_id}', '${t2.kind}', '${t2.guild_id}', false)">
               <span class="vg-badge vg-badge-titan">${t2.text}</span>
               <span class="vg-name" style="color: var(--hint); font-size: 11px;">Титаны</span>
             </div>
@@ -791,141 +702,15 @@
       container.innerHTML = html;
     }
 
-    function renderCardViewPayload(data) {
-      const container = document.getElementById('cardViewContent');
-      let html = `<div class="card-view-container">`;
-      if (data.images && data.images.length > 0) {
-        data.images.forEach(imgSrc => {
-          html += `<img class="card-view-img" src="${imgSrc}" alt="Карточка боя">`;
-        });
-      }
-      if (data.messages && data.messages.length > 0) {
-        data.messages.forEach(msg => {
-          html += `<div style="background: #1e293b; padding: 12px; border-radius: 10px; font-size: 12px; line-height: 1.4;">${msg}</div>`;
-        });
-      }
-      if (data.button_rows && data.button_rows.length > 0) {
-        html += `<div class="card-kb-container">`;
-        data.button_rows.forEach((row, rIdx) => {
-          html += `<div class="card-kb-row">`;
-          row.forEach((btn, bIdx) => {
-            const btnId = `cbtn-${rIdx}-${bIdx}`;
-            html += `
-              <button class="card-action-btn" id="${btnId}" onclick="sendCardCallback('${btn.callback_data}', '${btnId}', '${btn.text}')">
-                ${btn.text}
-              </button>
-            `;
-          });
-          html += `</div>`;
-        });
-        html += `</div>`;
-      }
-      html += `</div>`;
-      container.innerHTML = html;
-    }
-
-    function renderBattleSearchPayload(data) {
-      navigateTo('page-battle-search');
-      document.getElementById('battleSearchTitle').textContent = data.title ? data.title.toUpperCase() : "Результаты боёв";
-      const container = document.getElementById('battleSearchContent');
-      let html = `<div class="card-view-container">`;
-      if (data.images && data.images.length > 0) {
-        data.images.forEach(imgSrc => {
-          html += `<img class="card-view-img" src="${imgSrc}" alt="Таблица боёв">`;
-        });
-      }
-      if (data.messages && data.messages.length > 0) {
-        data.messages.forEach(msg => {
-          html += `<div style="background: #1e293b; padding: 12px; border-radius: 10px; font-size: 12px; line-height: 1.4;">${msg}</div>`;
-        });
-      }
-      if (data.button_rows && data.button_rows.length > 0) {
-        html += `<div class="card-kb-container">`;
-        data.button_rows.forEach((row, rIdx) => {
-          html += `<div class="card-kb-row">`;
-          row.forEach((btn, bIdx) => {
-            const btnId = `bsbtn-${rIdx}-${bIdx}`;
-            html += `
-              <button class="card-action-btn" id="${btnId}" onclick="sendCardCallback('${btn.callback_data}', '${btnId}', '${btn.text}')">
-                ${btn.text}
-              </button>
-            `;
-          });
-          html += `</div>`;
-        });
-        html += `</div>`;
-      }
-      html += `</div>`;
-      container.innerHTML = html;
-    }
-
-    async function openVgCard(constId, kind, guildId, isLastAttacks = false, titleText = "") {
+    async function selectVgTarget(constId, kind, guildId, isLastAttacks = false) {
       if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-      navigateTo('page-card-view');
-      document.getElementById('cardViewTitle').textContent = titleText || "Карточка позиции";
-      const container = document.getElementById('cardViewContent');
-      container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--hint);">Формирование карточек... ⏳</div>`;
-
-      try {
-        const response = await fetch(SERVER_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'get_vg_card',
-            user_id: getUserId(),
-            init_data: tg?.initData || '',
-            const_id: constId,
-            kind: kind,
-            guild_id: guildId,
-            is_last_attacks: isLastAttacks
-          })
-        });
-
-        const data = await response.json();
-        if (!data.ok) {
-          container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">${data.error || 'Не удалось загрузить карточку'}</div>`;
-          return;
-        }
-
-        renderCardViewPayload(data);
-      } catch (err) {
-        container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">Ошибка соединения с сервером</div>`;
-      }
-    }
-
-    async function sendCardCallback(callbackData, btnId, btnText) {
-      const btn = document.getElementById(btnId);
-      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-
-      if (callbackData.startsWith('train_') || callbackData.startsWith('trainvg_') || callbackData.startsWith('stp:')) {
-        if (btn) {
-          btn.textContent = `✓ ${btnText}`;
-          btn.classList.add('sent');
-        }
-        if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-      }
-
-      try {
-        const response = await fetch(SERVER_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'send_card_callback',
-            user_id: getUserId(),
-            init_data: tg?.initData || '',
-            callback_data: callbackData
-          })
-        });
-
-        const data = await response.json();
-        if (data.ok) {
-          if (data.images && data.images.length > 0) {
-            renderBattleSearchPayload(data);
-          }
-        }
-      } catch (e) {
-        console.error(e);
-      }
+      await sendAction('open_vg_player', { 
+        const_id: constId, 
+        kind: kind, 
+        guild_id: guildId, 
+        is_last_attacks: isLastAttacks 
+      });
+      if (tg) tg.close();
     }
 
     const HEROES = [
