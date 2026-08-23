@@ -219,7 +219,7 @@
       object-fit: cover;
       background-color: #1e293b;
     }
-    .hero-card .hero-label {
+    .hero-label {
       position: relative;
       z-index: 2;
       width: 100%;
@@ -698,7 +698,6 @@
       if (action === 'quick_command' && tg) tg.close();
     }
 
-    // Загрузка экрана Соперников ВГ
     async function openTodayGwScreen() {
       navigateTo('page-vg-targets');
       const container = document.getElementById('vgTargetsContent');
@@ -736,7 +735,6 @@
         const t1 = targets[i];
         const t2 = targets[i + 1];
 
-        // Кнопка My last attacks
         if (t1 && (t1.is_last_attacks || t1.text === "My last attacks")) {
           html += `
             <div class="vg-card-slot vg-single-btn" onclick="openVgCard('', 'hero', '${t1.guild_id}', true, 'My last attacks')">
@@ -774,7 +772,6 @@
       container.innerHTML = html;
     }
 
-    // Загрузка и показ карточек позиции ВГ прямо внутри WebApp
     async function openVgCard(constId, kind, guildId, isLastAttacks = false, titleText = "") {
       if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
       navigateTo('page-card-view');
@@ -896,7 +893,7 @@
       { name: "Криста",             classes: ["Маг"], img: "images/криста.png" },
       { name: "Кроу",               classes: ["Боец"], img: "images/кроу.png" },
       { name: "Ксеша",              classes: ["Маг"], img: "images/ксеша.png" },
-      { name: "Лара Крофт",         classes: ["Стрелок"], img: "images/лара кроフト.png" },
+      { name: "Лара Крофт",         classes: ["Стрелок"], img: "images/лара крофт.png" },
       { name: "Ларс",               classes: ["Маг", "Контроль"], img: "images/ларс.png" },
       { name: "Леонель",            classes: ["Поддержка", "Боец"], img: "images/леонель.png" },
       { name: "Лилит",              classes: ["Маг", "Танк"], img: "images/лилит.png" },
