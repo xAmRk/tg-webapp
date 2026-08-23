@@ -532,7 +532,7 @@
     </div>
   </div>
 
-  <!-- 3. Экран просмотра карточек боя прямо в WebApp -->
+  <!-- 3. Экран просмотра карточек позиции ВГ -->
   <div id="page-card-view" class="page">
     <div class="top-nav">
       <button class="back-btn" onclick="navigateTo('page-vg-targets')">‹ К позициям</button>
@@ -548,7 +548,23 @@
     </div>
   </div>
 
-  <!-- 4. Страница выбора героев -->
+  <!-- 4. Экран просмотра таблиц vdr / vgsf / поиска боев -->
+  <div id="page-battle-search" class="page">
+    <div class="top-nav">
+      <button class="back-btn" onclick="navigateTo('page-card-view')">‹ К карточке</button>
+      <div class="slots-title" style="flex-grow: 1;">
+        <span id="battleSearchTitle">Поиск боев</span>
+      </div>
+    </div>
+
+    <div id="battleSearchContent">
+      <div style="text-align: center; padding: 40px 0; color: var(--hint);">
+        Загрузка таблицы боев... ⏳
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Страница выбора героев STP -->
   <div id="page-heroes" class="page">
     <div class="slots-container">
       <div class="top-nav">
@@ -606,7 +622,7 @@
     </div>
   </div>
 
-  <!-- 5. Экран результатов STP -->
+  <!-- 6. Экран результатов STP -->
   <div id="page-results" class="page">
     <div class="top-nav">
       <button class="back-btn" onclick="navigateTo('page-heroes')">‹ К героям</button>
@@ -655,6 +671,9 @@
         } else if (pageId === 'page-card-view') {
           tg.BackButton.show();
           tg.BackButton.onClick(() => navigateTo('page-vg-targets'));
+        } else if (pageId === 'page-battle-search') {
+          tg.BackButton.show();
+          tg.BackButton.onClick(() => navigateTo('page-card-view'));
         } else if (pageId === 'page-results') {
           tg.BackButton.show();
           tg.BackButton.onClick(() => navigateTo('page-heroes'));
@@ -805,6 +824,41 @@
       container.innerHTML = html;
     }
 
+    function renderBattleSearchPayload(data) {
+      navigateTo('page-battle-search');
+      document.getElementById('battleSearchTitle').textContent = data.title ? data.title.toUpperCase() : "Результаты боёв";
+      const container = document.getElementById('battleSearchContent');
+      let html = `<div class="card-view-container">`;
+      if (data.images && data.images.length > 0) {
+        data.images.forEach(imgSrc => {
+          html += `<img class="card-view-img" src="${imgSrc}" alt="Таблица боёв">`;
+        });
+      }
+      if (data.messages && data.messages.length > 0) {
+        data.messages.forEach(msg => {
+          html += `<div style="background: #1e293b; padding: 12px; border-radius: 10px; font-size: 12px; line-height: 1.4;">${msg}</div>`;
+        });
+      }
+      if (data.button_rows && data.button_rows.length > 0) {
+        html += `<div class="card-kb-container">`;
+        data.button_rows.forEach((row, rIdx) => {
+          html += `<div class="card-kb-row">`;
+          row.forEach((btn, bIdx) => {
+            const btnId = `bsbtn-${rIdx}-${bIdx}`;
+            html += `
+              <button class="card-action-btn" id="${btnId}" onclick="sendCardCallback('${btn.callback_data}', '${btnId}', '${btn.text}')">
+                ${btn.text}
+              </button>
+            `;
+          });
+          html += `</div>`;
+        });
+        html += `</div>`;
+      }
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
     async function openVgCard(constId, kind, guildId, isLastAttacks = false, titleText = "") {
       if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
       navigateTo('page-card-view');
@@ -864,8 +918,8 @@
         });
 
         const data = await response.json();
-        if (data.ok && data.images && data.images.length > 0) {
-          renderCardViewPayload(data);
+        if (data.ok && (data.images?.length > 0 || data.messages?.length > 0)) {
+          renderBattleSearchPayload(data);
         }
       } catch (e) {
         console.error(e);
