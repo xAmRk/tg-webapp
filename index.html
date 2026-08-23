@@ -283,7 +283,7 @@
     }
     .submit-btn.active { opacity: 1; pointer-events: auto; }
 
-    /* Таблица со стилями из Python matplotlib renderer */
+    /* Таблица 1-в-1 по стилю оригинальной картинки бота */
     .table-container {
       width: 100%;
       background-color: #1e283a;
@@ -320,14 +320,14 @@
     .col-hero   { width: 12%; font-family: monospace; font-size: 10px; }
     .col-power  { width: 14%; font-family: monospace; font-size: 10.5px; font-weight: 700; }
 
-    /* Фоны согласно константам Python */
-    .cell-player-full { background: #1f4039 !important; } /* _CELL_BG_COLOR */
-    .cell-player-part { background: #1e283a !important; } /* _IMAGE_BG_COLOR */
+    /* Точные фоны */
+    .cell-player-full { background: #1f4039 !important; }
+    .cell-player-part { background: #1e283a !important; }
 
-    .cell-bg-high { background: #1e283a !important; } /* _IMAGE_BG_COLOR */
-    .cell-bg-norm { background: #1e283a !important; } /* _IMAGE_BG_COLOR */
-    .cell-bg-low  { background: #000000 !important; } /* _ASKED_PACK_COLOR (черный) */
-    .cell-bg-none { background: #1e283a !important; } /* _IMAGE_BG_COLOR */
+    .cell-bg-0 { background: #1e283a !important; } /* Стандартная мощь */
+    .cell-bg-1 { background: #1e283a !important; } /* Высокая мощь */
+    .cell-bg-2 { background: #000000 !important; } /* Низкая мощь (<150к) */
+    .cell-bg-empty { background: #1e283a !important; }
 
     .cell-power-full { background: #1f4039 !important; color: #ffffff !important; }
     .cell-power-part { background: #1e283a !important; color: #00ffff !important; }
@@ -350,12 +350,12 @@
     .player-btn:active { color: #00ffff; }
     .player-btn.sent { color: #00ff00; }
 
-    /* Точные цвета текста реликвий из _TITAN_COLORS */
-    .relic-10 { color: #ffffff !important; }                    /* (1, 1, 1) Белый */
-    .relic-11 { color: #00ff00 !important; font-weight: 600; }  /* (0, 1, 0) Чистый зеленый */
-    .relic-12 { color: #00ffff !important; font-weight: 600; }  /* (0, 1, 1) Чистый бирюзовый */
-    .relic-13 { color: #a534ff !important; font-weight: 600; }  /* (0.647, 0.204, 1) Фиолетовый */
-    .relic-14 { color: #ffa500 !important; font-weight: 700; }  /* (1, 0.647, 0) Оранжево-золотой */
+    /* Цвета текста реликвий */
+    .relic-10 { color: #ffffff !important; }                    /* Белый */
+    .relic-11 { color: #00ff00 !important; font-weight: 600; }  /* Зеленый */
+    .relic-12 { color: #00ffff !important; font-weight: 600; }  /* Бирюзовый */
+    .relic-13 { color: #a534ff !important; font-weight: 600; }  /* Фиолетовый */
+    .relic-14 { color: #ffa500 !important; font-weight: 700; }  /* Золотой */
   </style>
 </head>
 <body>
@@ -730,16 +730,10 @@
       renderHeroes(searchInput.value);
     }
 
-    function getBgClass(bgColor, val) {
-      if (!val || val === 0) return 'cell-bg-none';
-      if (bgColor === 2) return 'cell-bg-low'; // _ASKED_PACK_COLOR черный
-      return 'cell-bg-norm';                  // _IMAGE_BG_COLOR
-    }
-
     function fmtPower(val, relicCode, bgColor) {
-      if (!val || val === 0) return { text: '', cls: '', bgCls: 'cell-bg-none' };
+      if (!val || val === 0) return { text: '', cls: '', bgCls: 'cell-bg-empty' };
       let cls = `relic-${relicCode || 10}`;
-      let bgCls = getBgClass(bgColor, val);
+      let bgCls = `cell-bg-${bgColor !== undefined ? bgColor : 0}`;
       let text = (val / 1000).toFixed(0) + 'к';
       return { text, cls, bgCls };
     }
@@ -802,8 +796,10 @@
       `;
 
       players.forEach((p, idx) => {
-        const playerCellBg = p.has_full_pack ? 'cell-player-full' : 'cell-player-part';
-        const powerCellBg  = p.has_full_pack ? 'cell-power-full'  : 'cell-power-part';
+        // Зеленый фон ставится для первых участников с полным паком
+        const isTopFullPack = p.has_full_pack && idx < 7;
+        const playerCellBg = isTopFullPack ? 'cell-player-full' : 'cell-player-part';
+        const powerCellBg  = isTopFullPack ? 'cell-power-full'  : 'cell-power-part';
 
         html += `
           <tr>
@@ -813,7 +809,7 @@
               </button>
             </td>
             ${p.powers.map((pw, hIdx) => {
-              const relicCode = p.relic_codes ? p.relic_codes[hIdx] : 10;
+              const relicCode = p.relic_colors ? p.relic_colors[hIdx] : 10;
               const bgColor = p.bg_colors ? p.bg_colors[hIdx] : 0;
               const f = fmtPower(pw, relicCode, bgColor);
               return `<td class="col-hero ${f.cls} ${f.bgCls}">${f.text}</td>`;
