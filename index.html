@@ -334,6 +334,10 @@
   </div>
 
   <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(console.error);
+    }
+
     const tg = window.Telegram?.WebApp || null;
     if (tg) {
       try {
@@ -474,7 +478,7 @@
       { name: "Хайди",              img: "images/хайди.png" },
       { name: "Цин Мао",            img: "images/цин мао.png" },
       { name: "Чабба",              img: "images/чабба.png" },
-      { name: "Черепашки ниндзя", img: "images/черепашки.png" },
+      { name: "Черепашки ниндзя",   img: "images/черепашки.png" },
       { name: "Эйден",              img: "images/эйден.png" },
       { name: "Электра",            img: "images/электра.png" },
       { name: "Эльмир",             img: "images/эльмир.png" },
