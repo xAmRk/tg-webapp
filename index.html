@@ -219,7 +219,7 @@
       object-fit: cover;
       background-color: #1e293b;
     }
-    .hero-label {
+    .hero-card .hero-label {
       position: relative;
       z-index: 2;
       width: 100%;
@@ -772,6 +772,39 @@
       container.innerHTML = html;
     }
 
+    function renderCardViewPayload(data) {
+      const container = document.getElementById('cardViewContent');
+      let html = `<div class="card-view-container">`;
+      if (data.images && data.images.length > 0) {
+        data.images.forEach(imgSrc => {
+          html += `<img class="card-view-img" src="${imgSrc}" alt="Карточка боя">`;
+        });
+      }
+      if (data.messages && data.messages.length > 0) {
+        data.messages.forEach(msg => {
+          html += `<div style="background: #1e293b; padding: 12px; border-radius: 10px; font-size: 12px; line-height: 1.4;">${msg}</div>`;
+        });
+      }
+      if (data.button_rows && data.button_rows.length > 0) {
+        html += `<div class="card-kb-container">`;
+        data.button_rows.forEach((row, rIdx) => {
+          html += `<div class="card-kb-row">`;
+          row.forEach((btn, bIdx) => {
+            const btnId = `cbtn-${rIdx}-${bIdx}`;
+            html += `
+              <button class="card-action-btn" id="${btnId}" onclick="sendCardCallback('${btn.callback_data}', '${btnId}', '${btn.text}')">
+                ${btn.text}
+              </button>
+            `;
+          });
+          html += `</div>`;
+        });
+        html += `</div>`;
+      }
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
     async function openVgCard(constId, kind, guildId, isLastAttacks = false, titleText = "") {
       if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
       navigateTo('page-card-view');
@@ -800,49 +833,27 @@
           return;
         }
 
-        let html = `<div class="card-view-container">`;
-        if (data.images && data.images.length > 0) {
-          data.images.forEach(imgSrc => {
-            html += `<img class="card-view-img" src="${imgSrc}" alt="Карточка боя">`;
-          });
-        }
-        if (data.messages && data.messages.length > 0) {
-          data.messages.forEach(msg => {
-            html += `<div style="background: #1e293b; padding: 12px; border-radius: 10px; font-size: 12px; line-height: 1.4;">${msg}</div>`;
-          });
-        }
-        if (data.button_rows && data.button_rows.length > 0) {
-          html += `<div class="card-kb-container">`;
-          data.button_rows.forEach((row, rIdx) => {
-            html += `<div class="card-kb-row">`;
-            row.forEach((btn, bIdx) => {
-              const btnId = `cbtn-${rIdx}-${bIdx}`;
-              html += `
-                <button class="card-action-btn" id="${btnId}" onclick="sendCardCallback('${btn.callback_data}', '${btnId}')">
-                  ${btn.text}
-                </button>
-              `;
-            });
-            html += `</div>`;
-          });
-          html += `</div>`;
-        }
-        html += `</div>`;
-        container.innerHTML = html;
+        renderCardViewPayload(data);
       } catch (err) {
         container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">Ошибка соединения с сервером</div>`;
       }
     }
 
-    async function sendCardCallback(callbackData, btnId) {
+    async function sendCardCallback(callbackData, btnId, btnText) {
       const btn = document.getElementById(btnId);
-      if (btn) {
-        btn.textContent = `✓ Запрошено`;
-        btn.classList.add('sent');
+      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+
+      // Если это кнопка тренировки -> меняем текст на галочку
+      if (callbackData.startsWith('train_') || callbackData.startsWith('trainvg_') || callbackData.startsWith('stp:')) {
+        if (btn) {
+          btn.textContent = `✓ ${btnText}`;
+          btn.classList.add('sent');
+        }
+        if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
       }
-      if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+
       try {
-        await fetch(SERVER_URL, {
+        const response = await fetch(SERVER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -852,6 +863,12 @@
             callback_data: callbackData
           })
         });
+
+        const data = await response.json();
+        // Если пришла обновленная карточка боев (vdr / vgsf / filter) -> перерисовываем
+        if (data.ok && data.images && data.images.length > 0) {
+          renderCardViewPayload(data);
+        }
       } catch (e) {
         console.error(e);
       }
