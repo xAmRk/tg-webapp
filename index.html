@@ -154,25 +154,29 @@
 
     .class-filters {
       display: flex;
+      flex-wrap: wrap;
       gap: 6px;
-      overflow-x: auto;
-      padding-bottom: 8px;
-      margin-bottom: 8px;
-      scrollbar-width: none;
+      margin-bottom: 12px;
     }
-    .class-filters::-webkit-scrollbar { display: none; }
 
     .filter-chip {
       background: var(--card-bg);
       color: var(--hint);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 20px;
-      padding: 6px 13px;
+      border-radius: 16px;
+      padding: 6px 11px;
       font-size: 12px;
       font-weight: 500;
       white-space: nowrap;
       cursor: pointer;
       transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .filter-chip:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      color: var(--text);
     }
     .filter-chip.active {
       background: var(--accent);
@@ -356,7 +360,7 @@
       <input type="text" id="searchInput" class="search-input" placeholder="🔍 Поиск героя...">
     </div>
 
-    <!-- Фильтры по игровым классам на русском языке -->
+    <!-- Фильтры по игровым классам (с аккуратным переносом строк для ПК и телефонов) -->
     <div class="class-filters" id="classFilters">
       <div class="filter-chip active" onclick="setClassFilter('all')">Все</div>
       <div class="filter-chip" onclick="setClassFilter('Контроль')">👁 Контроль</div>
