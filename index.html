@@ -7,9 +7,9 @@
   <script src="telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #1e283a;
-      --card-bg: #131c2b;
-      --text: #ffffff;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
       --hint: #94a3b8;
       --btn-bg: #3b82f6;
       --btn-text: #ffffff;
@@ -283,7 +283,7 @@
     }
     .submit-btn.active { opacity: 1; pointer-events: auto; }
 
-    /* Таблица результатов 1-в-1 */
+    /* Таблица результатов */
     .table-container {
       width: 100%;
       background-color: #1e283a;
@@ -344,29 +344,68 @@
     .relic-13 { color: #a534ff !important; font-weight: 600; }
     .relic-14 { color: #ffa500 !important; font-weight: 700; }
 
-    /* Экран ВГ позиций */
-    .vg-targets-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 10px;
+    /* Дизайн экрана позиций ВГ */
+    .vg-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
       padding-bottom: 24px;
     }
-    .vg-target-btn {
-      background-color: var(--card-bg);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+    .vg-row-pair {
+      display: grid;
+      grid-template-columns: 1.4fr 0.9fr;
+      gap: 6px;
+    }
+    .vg-card-slot {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.07);
       border-radius: 10px;
-      padding: 10px 12px;
-      color: #ffffff;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
+      padding: 8px 10px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      transition: all 0.15s ease;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.12s ease;
+      min-width: 0;
     }
-    .vg-target-btn:active { transform: scale(0.97); background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; }
+    .vg-card-slot:active {
+      transform: scale(0.97);
+      background: #28364f;
+      border-color: #38bdf8;
+    }
+    .vg-badge {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: #38bdf8;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: monospace;
+      padding: 3px 6px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      text-align: center;
+    }
+    .vg-badge-titan {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fbbf24;
+    }
+    .vg-name {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #f8fafc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .vg-single-btn {
+      grid-column: span 2;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px dashed rgba(56, 189, 248, 0.4);
+      justify-content: center;
+      padding: 12px;
+    }
   </style>
 </head>
 <body>
@@ -613,20 +652,56 @@
         }
 
         document.getElementById('vgGuildTitle').textContent = `⚔️ ${data.guild_name}`;
-        let html = `<div class="vg-targets-grid">`;
-        data.targets.forEach(t => {
-          html += `
-            <button class="vg-target-btn" onclick="selectVgTarget('${t.const_id}', '${t.kind}', '${t.guild_id}')">
-              <span>${t.text}</span>
-              <span>›</span>
-            </button>
-          `;
-        });
-        html += `</div>`;
-        container.innerHTML = html;
+        renderVgTargetsList(data.targets);
       } catch (err) {
         container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">Ошибка соединения с сервером</div>`;
       }
+    }
+
+    function renderVgTargetsList(targets) {
+      const container = document.getElementById('vgTargetsContent');
+      let html = `<div class="vg-list-container">`;
+
+      for (let i = 0; i < targets.length; i += 2) {
+        const t1 = targets[i];
+        const t2 = targets[i + 1];
+
+        // Кнопка My last attacks
+        if (t1 && t1.text === "My last attacks") {
+          html += `
+            <div class="vg-card-slot vg-single-btn" onclick="selectVgTarget('${t1.const_id}', '${t1.kind}', '${t1.guild_id}')">
+              <span style="font-weight: 700; color: #38bdf8;">📊 ${t1.text}</span>
+            </div>
+          `;
+          break;
+        }
+
+        const p1 = t1.text.split(' ');
+        const slot1 = p1[0];
+        const nick1 = p1.slice(1).join(' ');
+
+        html += `<div class="vg-row-pair">`;
+        html += `
+          <div class="vg-card-slot" onclick="selectVgTarget('${t1.const_id}', '${t1.kind}', '${t1.guild_id}')">
+            <span class="vg-badge">${slot1}</span>
+            <span class="vg-name">${nick1}</span>
+          </div>
+        `;
+
+        if (t2) {
+          html += `
+            <div class="vg-card-slot" onclick="selectVgTarget('${t2.const_id}', '${t2.kind}', '${t2.guild_id}')">
+              <span class="vg-badge vg-badge-titan">${t2.text}</span>
+              <span class="vg-name" style="color: var(--hint); font-size: 11px;">Титаны</span>
+            </div>
+          `;
+        }
+
+        html += `</div>`;
+      }
+
+      html += `</div>`;
+      container.innerHTML = html;
     }
 
     async function selectVgTarget(constId, kind, guildId) {
