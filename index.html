@@ -407,7 +407,7 @@
       padding: 12px;
     }
 
-    /* Экран просмотра карточек боя внутри WebApp */
+    /* Экран просмотра карточек боя */
     .card-view-container {
       display: flex;
       flex-direction: column;
@@ -422,24 +422,40 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
       display: block;
     }
-    .card-action-bar {
+    
+    /* Клавиатура кнопок в точности по рядам бота */
+    .card-kb-container {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 6px;
-      justify-content: center;
-      margin-top: 8px;
+      margin-top: 10px;
+      background: #111827;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .card-kb-row {
+      display: flex;
+      gap: 6px;
+      width: 100%;
     }
     .card-action-btn {
+      flex: 1;
       background: #1e293b;
-      border: 1px solid #38bdf8;
-      color: #38bdf8;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #f8fafc;
       border-radius: 8px;
-      padding: 6px 12px;
+      padding: 8px 2px;
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: all 0.15s ease;
     }
-    .card-action-btn:active { background: #38bdf8; color: #0f172a; }
+    .card-action-btn:active { background: #38bdf8; color: #0f172a; transform: scale(0.96); }
     .card-action-btn.sent { background: #22c55e; border-color: #22c55e; color: #fff; }
   </style>
 </head>
@@ -798,14 +814,19 @@
             html += `<div style="background: #1e293b; padding: 12px; border-radius: 10px; font-size: 12px; line-height: 1.4;">${msg}</div>`;
           });
         }
-        if (data.buttons && data.buttons.length > 0) {
-          html += `<div class="card-action-bar">`;
-          data.buttons.forEach((btn, bIdx) => {
-            html += `
-              <button class="card-action-btn" id="cbtn-${bIdx}" onclick="sendCardCallback('${btn.callback_data}', ${bIdx})">
-                ${btn.text}
-              </button>
-            `;
+        if (data.button_rows && data.button_rows.length > 0) {
+          html += `<div class="card-kb-container">`;
+          data.button_rows.forEach((row, rIdx) => {
+            html += `<div class="card-kb-row">`;
+            row.forEach((btn, bIdx) => {
+              const btnId = `cbtn-${rIdx}-${bIdx}`;
+              html += `
+                <button class="card-action-btn" id="${btnId}" onclick="sendCardCallback('${btn.callback_data}', '${btnId}')">
+                  ${btn.text}
+                </button>
+              `;
+            });
+            html += `</div>`;
           });
           html += `</div>`;
         }
@@ -816,8 +837,8 @@
       }
     }
 
-    async function sendCardCallback(callbackData, btnIdx) {
-      const btn = document.getElementById(`cbtn-${btnIdx}`);
+    async function sendCardCallback(callbackData, btnId) {
+      const btn = document.getElementById(btnId);
       if (btn) {
         btn.textContent = `✓ Запрошено`;
         btn.classList.add('sent');
