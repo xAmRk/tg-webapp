@@ -7,9 +7,9 @@
   <script src="telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --text: #f8fafc;
+      --bg: #1e283a;
+      --card-bg: #131c2b;
+      --text: #ffffff;
       --hint: #94a3b8;
       --btn-bg: #3b82f6;
       --btn-text: #ffffff;
@@ -27,7 +27,7 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
-      padding: 12px;
+      padding: 10px;
       background-color: var(--bg);
       color: var(--text);
     }
@@ -76,7 +76,7 @@
     .command { font-size: 12px; color: var(--hint); font-family: monospace; }
     .arrow { color: var(--hint); font-size: 18px; margin-left: 8px; }
 
-    .top-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .top-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
     .back-btn {
       background: var(--card-bg);
       color: var(--accent);
@@ -283,46 +283,61 @@
     }
     .submit-btn.active { opacity: 1; pointer-events: auto; }
 
-    /* Таблица в точности по стилям оригинального Hero Wars */
+    /* Таблица со стилями из Python matplotlib renderer */
     .table-container {
       width: 100%;
-      background-color: #0c1222;
-      border-radius: 10px;
-      border: 1px solid #1e293b;
-      margin-top: 8px;
-      padding-bottom: 20px;
+      background-color: #1e283a;
+      border: 1px solid #202d3d;
+      margin-top: 6px;
+      padding-bottom: 24px;
     }
     table.result-table {
       width: 100%;
       table-layout: fixed;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 1px;
       font-size: 11px;
       text-align: center;
+      background-color: #202d3d;
     }
     table.result-table th, table.result-table td {
-      padding: 6px 2px;
-      border: 1px solid #162032;
+      padding: 5px 2px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      height: 24px;
+      line-height: 14px;
     }
     table.result-table th {
-      background: #0f172a;
-      color: #94a3b8;
+      background: #1e283a;
+      color: #ffffff;
       font-weight: 600;
       font-size: 10px;
       text-transform: lowercase;
     }
+    
     .col-player { width: 28%; text-align: left; padding-left: 6px !important; }
-    .col-hero   { width: 12%; font-family: monospace; font-size: 10.5px; }
-    .col-power  { width: 14%; font-family: monospace; font-size: 11px; font-weight: 700; color: #38bdf8; }
+    .col-hero   { width: 12%; font-family: monospace; font-size: 10px; }
+    .col-power  { width: 14%; font-family: monospace; font-size: 10.5px; font-weight: 700; }
+
+    /* Фоны согласно константам Python */
+    .cell-player-full { background: #1f4039 !important; } /* _CELL_BG_COLOR */
+    .cell-player-part { background: #1e283a !important; } /* _IMAGE_BG_COLOR */
+
+    .cell-bg-high { background: #1e283a !important; } /* _IMAGE_BG_COLOR */
+    .cell-bg-norm { background: #1e283a !important; } /* _IMAGE_BG_COLOR */
+    .cell-bg-low  { background: #000000 !important; } /* _ASKED_PACK_COLOR (черный) */
+    .cell-bg-none { background: #1e283a !important; } /* _IMAGE_BG_COLOR */
+
+    .cell-power-full { background: #1f4039 !important; color: #ffffff !important; }
+    .cell-power-part { background: #1e283a !important; color: #00ffff !important; }
 
     .player-btn {
       display: block;
       width: 100%;
       background: transparent;
       border: none;
-      color: #f8fafc;
+      color: #ffffff;
       font-size: 11px;
       font-weight: 600;
       text-align: left;
@@ -330,24 +345,17 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      padding: 2px 0;
+      padding: 0;
     }
-    .player-btn:active { color: #38bdf8; }
-    .player-btn.sent { color: #22c55e; }
+    .player-btn:active { color: #00ffff; }
+    .player-btn.sent { color: #00ff00; }
 
-    /* Фон строки для соклановцев с полным паком (зеленоватый) */
-    tr.full-pack { background: rgba(22, 101, 52, 0.25); }
-
-    /* Фон темной плашки для героев с мощью < 150 000 */
-    .bg-dark { background-color: #000000 !important; }
-
-    /* Точные цвета реликвий из SQL-запроса */
-    .relic-10 { color: #ffffff !important; }                    /* Без реликвии / белый */
-    .relic-11 { color: #22c55e !important; font-weight: 600; }  /* 1-9 / зеленый */
-    .relic-12 { color: #00ffff !important; font-weight: 600; }  /* 10-19 / бирюзовый (cyan) */
-    .relic-13 { color: #c084fc !important; font-weight: 600; }  /* 20-29 / фиолетовый */
-    .relic-14 { color: #f59e0b !important; font-weight: 700; }  /* 30 / золотой (оранжевый) */
-    .relic-dim { color: #334155 !important; }                   /* Нет героя */
+    /* Точные цвета текста реликвий из _TITAN_COLORS */
+    .relic-10 { color: #ffffff !important; }                    /* (1, 1, 1) Белый */
+    .relic-11 { color: #00ff00 !important; font-weight: 600; }  /* (0, 1, 0) Чистый зеленый */
+    .relic-12 { color: #00ffff !important; font-weight: 600; }  /* (0, 1, 1) Чистый бирюзовый */
+    .relic-13 { color: #a534ff !important; font-weight: 600; }  /* (0.647, 0.204, 1) Фиолетовый */
+    .relic-14 { color: #ffa500 !important; font-weight: 700; }  /* (1, 0.647, 0) Оранжево-золотой */
   </style>
 </head>
 <body>
@@ -722,10 +730,16 @@
       renderHeroes(searchInput.value);
     }
 
+    function getBgClass(bgColor, val) {
+      if (!val || val === 0) return 'cell-bg-none';
+      if (bgColor === 2) return 'cell-bg-low'; // _ASKED_PACK_COLOR черный
+      return 'cell-bg-norm';                  // _IMAGE_BG_COLOR
+    }
+
     function fmtPower(val, relicCode, bgColor) {
-      if (!val || val === 0) return { text: '', cls: 'relic-dim', bgCls: '' };
+      if (!val || val === 0) return { text: '', cls: '', bgCls: 'cell-bg-none' };
       let cls = `relic-${relicCode || 10}`;
-      let bgCls = bgColor === 2 ? 'bg-dark' : '';
+      let bgCls = getBgClass(bgColor, val);
       let text = (val / 1000).toFixed(0) + 'к';
       return { text, cls, bgCls };
     }
@@ -788,10 +802,12 @@
       `;
 
       players.forEach((p, idx) => {
-        const rowClass = p.has_full_pack ? 'full-pack' : '';
+        const playerCellBg = p.has_full_pack ? 'cell-player-full' : 'cell-player-part';
+        const powerCellBg  = p.has_full_pack ? 'cell-power-full'  : 'cell-power-part';
+
         html += `
-          <tr class="${rowClass}">
-            <td class="col-player">
+          <tr>
+            <td class="col-player ${playerCellBg}">
               <button class="player-btn" id="btn-player-${idx}" onclick="requestTraining('${uid}', '${p.const_id}', '${p.nickname}', ${idx})">
                 ${p.nickname}
               </button>
@@ -802,7 +818,7 @@
               const f = fmtPower(pw, relicCode, bgColor);
               return `<td class="col-hero ${f.cls} ${f.bgCls}">${f.text}</td>`;
             }).join('')}
-            <td class="col-power">${fmtTotal(p.total_power)}</td>
+            <td class="col-power ${powerCellBg}">${fmtTotal(p.total_power)}</td>
           </tr>
         `;
       });
@@ -850,7 +866,6 @@
 
     submitBtn.addEventListener('click', searchPackTable);
 
-    // Первичный рендер
     renderHeroes();
   </script>
 </body>
