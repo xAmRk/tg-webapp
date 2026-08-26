@@ -841,7 +841,6 @@
       const btn = document.getElementById(btnId);
       if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
 
-      // Если это кнопка тренировки -> перекрашиваем в зеленую галочку
       if (callbackData.startsWith('train_') || callbackData.startsWith('trainvg_') || callbackData.startsWith('stp:') || callbackData.startsWith('trainany_')) {
         if (btn) {
           btn.textContent = `✓ ${btnText || btn.textContent}`;
@@ -1100,7 +1099,7 @@
             <thead>
               <tr>
                 <th class="col-player th-side">name</th>
-                ${heroes.map(h => `<th class="col-hero th-hero">${h}</th>`).join('')}
+                ${heroes.join('') ? heroes.map(h => `<th class="col-hero th-hero">${h}</th>`).join('') : ''}
                 <th class="col-power th-side">power</th>
               </tr>
             </thead>
