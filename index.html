@@ -219,7 +219,7 @@
       object-fit: cover;
       background-color: #1e293b;
     }
-    .hero-label {
+    .hero-card .hero-label {
       position: relative;
       z-index: 2;
       width: 100%;
@@ -710,7 +710,7 @@
         guild_id: guildId, 
         is_last_attacks: isLastAttacks 
       });
-      if (tg) tg.close();
+      // Убрано tg.close(), чтобы интерфейс не пропадал
     }
 
     const HEROES = [
