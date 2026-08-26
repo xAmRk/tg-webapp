@@ -863,7 +863,7 @@
         });
 
         const data = await response.json();
-        // Если сервер вернул новую картинку (для vdr, vgsf, similar, фильтров) -> мгновенно перерисовываем карточку
+        // Если сервер прислал новую картинку (для vdr, vgsf, more history, фильтров) -> мгновенно обновляем карточку
         if (data.ok && data.images && data.images.length > 0) {
           renderCardViewPayload(data);
         }
