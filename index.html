@@ -704,13 +704,13 @@
 
     async function selectVgTarget(constId, kind, guildId, isLastAttacks = false) {
       if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+      // Восстановлен вызов отправки действия на сервер, убран tg.close()
       await sendAction('open_vg_player', { 
         const_id: constId, 
         kind: kind, 
         guild_id: guildId, 
         is_last_attacks: isLastAttacks 
       });
-      // Убрано tg.close(), чтобы интерфейс не пропадал
     }
 
     const HEROES = [
