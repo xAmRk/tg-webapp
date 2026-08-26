@@ -814,7 +814,7 @@
       }
       if (data.messages && data.messages.length > 0) {
         data.messages.forEach(msg => {
-          html += `<div style="background: #1e293b; padding: 12px; border-radius: 10px; font-size: 12px; line-height: 1.4;">${msg}</div>`;
+          html += `<div style="background: #1e293b; padding: 12px; border-radius: 10px; font-size: 12px; line-height: 1.4; white-space: pre-line; margin-bottom: 8px;">${msg}</div>`;
         });
       }
       if (data.button_rows && data.button_rows.length > 0) {
@@ -863,8 +863,7 @@
         });
 
         const data = await response.json();
-        // Если сервер прислал новую картинку (для vdr, vgsf, more history, фильтров) -> мгновенно обновляем карточку
-        if (data.ok && data.images && data.images.length > 0) {
+        if (data.ok) {
           renderCardViewPayload(data);
         }
       } catch (e) {
