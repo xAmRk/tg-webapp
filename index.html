@@ -844,7 +844,7 @@
       // Если это кнопка тренировки -> перекрашиваем в зеленую галочку
       if (callbackData.startsWith('train_') || callbackData.startsWith('trainvg_') || callbackData.startsWith('stp:') || callbackData.startsWith('trainany_')) {
         if (btn) {
-          btn.textContent = `✓ ${btnText}`;
+          btn.textContent = `✓ ${btnText || btn.textContent}`;
           btn.classList.add('sent');
         }
         if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
@@ -863,7 +863,7 @@
         });
 
         const data = await response.json();
-        // Если нажата vdr, vgsf или похожая кнопка фильтра/истории -> обновляем картинку в WebApp
+        // Если сервер вернул новую картинку (для vdr, vgsf, similar, фильтров) -> мгновенно перерисовываем карточку
         if (data.ok && data.images && data.images.length > 0) {
           renderCardViewPayload(data);
         }
