@@ -218,6 +218,7 @@
       height: 100%;
       object-fit: cover;
       background-color: #1e293b;
+      pointer-events: none;
     }
     .hero-card .hero-label {
       position: relative;
@@ -414,14 +415,20 @@
       gap: 12px;
       padding-bottom: 30px;
     }
-    .card-view-img {
+    .img-zoom-wrapper {
       width: 100%;
-      height: auto;
       border-radius: 12px;
+      overflow: hidden;
       border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      cursor: zoom-in;
+      position: relative;
+    }
+    .img-zoom-wrapper img {
+      width: 100%;
+      height: auto;
       display: block;
-      cursor: pointer;
+      pointer-events: none;
     }
     .card-kb-container {
       display: flex;
@@ -480,6 +487,39 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    /* Модальное полноэкранное окно с возможностью скролла */
+    #image-modal {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      display: none;
+      overflow-y: auto;
+      overflow-x: hidden;
+      z-index: 100000;
+      padding: 40px 10px 20px 10px;
+      text-align: center;
+    }
+    #image-modal.active { display: block; }
+    #image-modal img {
+      max-width: 100%;
+      height: auto;
+      display: inline-block;
+      border-radius: 6px;
+    }
+    .modal-close-hint {
+      position: fixed;
+      top: 10px;
+      right: 15px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      z-index: 100001;
+      backdrop-filter: blur(4px);
+    }
   </style>
 </head>
 <body>
@@ -488,6 +528,12 @@
   <div id="app-loader">
     <div class="app-spinner"></div>
     <div id="loader-text">Загрузка...</div>
+  </div>
+
+  <!-- Модальное окно для полного экрана внутри WebApp -->
+  <div id="image-modal" onclick="closeImageModal()">
+    <div class="modal-close-hint">✕ Закрыть</div>
+    <img id="modal-img" src="" alt="Увеличенное изображение">
   </div>
 
   <!-- 1. Главная страница -->
@@ -681,29 +727,22 @@
       if (loader) loader.classList.remove('active');
     }
 
-    // Функция отправки картинки в чат бота по клику, чтобы она открылась в штатном просмотрщике
-    function sendImageToChat(imgSrc) {
-      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-      showLoader("Отправка картинки в чат...");
-      
-      fetch(SERVER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'send_image_to_chat',
-          user_id: getUserId(),
-          init_data: tg?.initData || '',
-          image_data: imgSrc
-        })
-      })
-      .then(() => {
-        hideLoader();
-        if (tg) tg.close(); // Закрываем WebApp, чтобы пользователь сразу увидел открывшуюся картинку в чате с ботом
-      })
-      .catch(err => {
-        console.error(err);
-        hideLoader();
-      });
+    function openImageModal(wrapperEl) {
+      const imgEl = wrapperEl.querySelector('img');
+      const modal = document.getElementById('image-modal');
+      const modalImg = document.getElementById('modal-img');
+      if (modal && modalImg && imgEl) {
+        modalImg.src = imgEl.src;
+        modal.classList.add('active');
+        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+      }
+    }
+
+    function closeImageModal() {
+      const modal = document.getElementById('image-modal');
+      if (modal) {
+        modal.classList.remove('active');
+      }
     }
 
     function navigateTo(pageId) {
@@ -886,8 +925,11 @@
       let html = `<div class="card-view-container">`;
       if (data.images && data.images.length > 0) {
         data.images.forEach(imgSrc => {
-          // При клике отправляем в чат бота, где открывается идеальный просмотрщик Telegram
-          html += `<img class="card-view-img" src="${imgSrc}" alt="Карточка боя" onclick="sendImageToChat('${imgSrc}')" title="Нажмите, чтобы открыть в чате">`;
+          html += `
+            <div class="img-zoom-wrapper" onclick="openImageModal(this)">
+              <img src="${imgSrc}" alt="Карточка боя">
+            </div>
+          `;
         });
       }
       if (data.messages && data.messages.length > 0) {
