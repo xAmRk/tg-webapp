@@ -407,7 +407,7 @@
       padding: 12px;
     }
 
-    /* Экран просмотра карточки позиции */
+    /* Экран просмотра карточки позиции (фоновый блок вместо тега img) */
     .card-view-container {
       display: flex;
       flex-direction: column;
@@ -416,12 +416,15 @@
     }
     .card-view-img {
       width: 100%;
-      height: auto;
+      aspect-ratio: 16 / 9;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
       border-radius: 12px;
       border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-      display: block;
       cursor: pointer;
+      background-color: #0b1120;
     }
     .card-kb-container {
       display: flex;
@@ -481,7 +484,7 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Полноэкранный модал увеличения с прокруткой */
+    /* Настоящий полноэкранный зум без системного превью Telegram */
     #image-modal {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -917,7 +920,7 @@
       let html = `<div class="card-view-container">`;
       if (data.images && data.images.length > 0) {
         data.images.forEach(imgSrc => {
-          html += `<img class="card-view-img" src="${imgSrc}" alt="Карточка боя" onclick="openImageModal('${imgSrc}')">`;
+          html += `<div class="card-view-img" style="background-image: url('${imgSrc}');" onclick="openImageModal('${imgSrc}')" title="Нажмите для увеличения"></div>`;
         });
       }
       if (data.messages && data.messages.length > 0) {
