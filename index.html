@@ -421,6 +421,7 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
       display: block;
+      cursor: zoom-in;
     }
     .card-kb-container {
       display: flex;
@@ -479,6 +480,26 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    /* Модальное окно для увеличенного просмотра картинок */
+    #image-modal {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100000;
+      padding: 10px;
+      cursor: zoom-out;
+    }
+    #image-modal.active { display: flex; }
+    #image-modal img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
@@ -487,6 +508,11 @@
   <div id="app-loader">
     <div class="app-spinner"></div>
     <div id="loader-text">Загрузка...</div>
+  </div>
+
+  <!-- Модальное окно для увеличения картинок -->
+  <div id="image-modal" onclick="closeImageModal()">
+    <img id="modal-img" src="" alt="Увеличенное изображение">
   </div>
 
   <!-- 1. Главная страница -->
@@ -680,6 +706,23 @@
       if (loader) loader.classList.remove('active');
     }
 
+    function openImageModal(imgSrc) {
+      const modal = document.getElementById('image-modal');
+      const modalImg = document.getElementById('modal-img');
+      if (modal && modalImg) {
+        modalImg.src = imgSrc;
+        modal.classList.add('active');
+        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+      }
+    }
+
+    function closeImageModal() {
+      const modal = document.getElementById('image-modal');
+      if (modal) {
+        modal.classList.remove('active');
+      }
+    }
+
     function navigateTo(pageId) {
       if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -860,7 +903,7 @@
       let html = `<div class="card-view-container">`;
       if (data.images && data.images.length > 0) {
         data.images.forEach(imgSrc => {
-          html += `<img class="card-view-img" src="${imgSrc}" alt="Карточка боя">`;
+          html += `<img class="card-view-img" src="${imgSrc}" alt="Карточка боя" onclick="openImageModal('${imgSrc}')">`;
         });
       }
       if (data.messages && data.messages.length > 0) {
@@ -892,7 +935,6 @@
       const btn = document.getElementById(btnId);
       if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
 
-      // Кнопка «Назад»
       if (callbackData === 'webapp_back_to_prev') {
         navigateTo('page-vg-targets');
         return;
