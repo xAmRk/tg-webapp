@@ -421,7 +421,7 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
       display: block;
-      cursor: zoom-in;
+      cursor: pointer;
     }
     .card-kb-container {
       display: flex;
@@ -481,24 +481,37 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Модальное окно для увеличенного просмотра картинок */
+    /* Полноэкранный модал увеличения с прокруткой */
     #image-modal {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(0, 0, 0, 0.95);
       display: none;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
+      overflow: auto;
       z-index: 100000;
-      padding: 10px;
-      cursor: zoom-out;
+      padding: 20px 10px;
     }
     #image-modal.active { display: flex; }
     #image-modal img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      border-radius: 8px;
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 6px;
+    }
+    .modal-close-hint {
+      position: fixed;
+      top: 10px;
+      right: 15px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      z-index: 100001;
+      backdrop-filter: blur(4px);
     }
   </style>
 </head>
@@ -510,9 +523,10 @@
     <div id="loader-text">Загрузка...</div>
   </div>
 
-  <!-- Модальное окно для увеличения картинок -->
+  <!-- Модальное окно для увеличенного просмотра картинок -->
   <div id="image-modal" onclick="closeImageModal()">
-    <img id="modal-img" src="" alt="Увеличенное изображение">
+    <div class="modal-close-hint">✕ Закрыть</div>
+    <img id="modal-img" src="" alt="Увеличенное изображение" onclick="event.stopPropagation()">
   </div>
 
   <!-- 1. Главная страница -->
