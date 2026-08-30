@@ -421,15 +421,14 @@
       overflow: hidden;
       border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-      cursor: pointer;
+      cursor: zoom-in;
       position: relative;
     }
     .img-zoom-wrapper img {
       width: 100%;
       height: auto;
       display: block;
-      /* ЭТОТ ПАРАМЕТР БЛОКИРУЕТ ТЕЛЕГРАМ-ПРОСМОТРЩИК */
-      pointer-events: none; 
+      pointer-events: none;
     }
     .card-kb-container {
       display: flex;
@@ -489,7 +488,7 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Наше кастомное модальное окно с возможностью прокрутки (скролла) */
+    /* Модальное полноэкранное окно */
     #image-modal {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -531,7 +530,7 @@
     <div id="loader-text">Загрузка...</div>
   </div>
 
-  <!-- Модальное окно для увеличенного просмотра картинок -->
+  <!-- Модальное окно для полного экрана -->
   <div id="image-modal" onclick="closeImageModal()">
     <div class="modal-close-hint">✕ Закрыть</div>
     <img id="modal-img" src="" alt="Увеличенное изображение">
@@ -728,7 +727,6 @@
       if (loader) loader.classList.remove('active');
     }
 
-    /* Функция открытия увеличенной картинки */
     function openImageModal(wrapperEl) {
       const imgEl = wrapperEl.querySelector('img');
       const modal = document.getElementById('image-modal');
@@ -927,10 +925,9 @@
       let html = `<div class="card-view-container">`;
       if (data.images && data.images.length > 0) {
         data.images.forEach(imgSrc => {
-          // Здесь используется обертка, которая перехватывает клик и не дает Телеграму открыть системное окно
           html += `
             <div class="img-zoom-wrapper" onclick="openImageModal(this)">
-              <img src="${imgSrc}" alt="Карточка боя" style="pointer-events: none;">
+              <img src="${imgSrc}" alt="Карточка боя">
             </div>
           `;
         });
