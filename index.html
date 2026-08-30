@@ -407,25 +407,31 @@
       padding: 12px;
     }
 
-    /* Экран просмотра карточки позиции (БЕЗ ТЕГА IMG, ЧЕРЕЗ ФОНОВЫЙ БЛОК) */
+    /* Экран просмотра карточки позиции */
     .card-view-container {
       display: flex;
       flex-direction: column;
       gap: 12px;
       padding-bottom: 30px;
     }
-    .card-view-img-bg {
+    
+    /* Блок картинки в интерфейсе */
+    .card-view-img-box {
       width: 100%;
-      aspect-ratio: 16 / 9;
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      background-color: #0b1120;
       border-radius: 12px;
+      overflow: hidden;
       border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      background-color: #0b1120;
       cursor: zoom-in;
     }
+    .card-view-img-box img {
+      width: 100%;
+      height: auto;
+      display: block;
+      pointer-events: none; /* Запрещаем Telegram перехватывать клик */
+    }
+
     .card-kb-container {
       display: flex;
       flex-direction: column;
@@ -484,34 +490,35 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Модальное полноэкранное окно с возможностью скролла */
+    /* Модальное окно НА ВЕСЬ ЭКРАН НА ЧЕРНОМ ФОНЕ */
     #image-modal {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.95);
+      background: rgba(0, 0, 0, 0.98);
       display: none;
       overflow-y: auto;
       overflow-x: hidden;
       z-index: 100000;
-      padding: 40px 10px 20px 10px;
+      padding: 50px 10px 30px 10px;
       text-align: center;
     }
     #image-modal.active { display: block; }
     #image-modal img {
-      max-width: 100%;
+      width: 100%;
       height: auto;
-      display: inline-block;
-      border-radius: 6px;
+      display: block;
+      border-radius: 4px;
     }
     .modal-close-hint {
       position: fixed;
       top: 10px;
       right: 15px;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.25);
       color: #fff;
-      padding: 6px 12px;
+      padding: 8px 16px;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
       z-index: 100001;
       backdrop-filter: blur(4px);
@@ -526,7 +533,7 @@
     <div id="loader-text">Загрузка...</div>
   </div>
 
-  <!-- Модальное окно для полного экрана внутри WebApp -->
+  <!-- Модальное окно во весь экран -->
   <div id="image-modal" onclick="closeImageModal()">
     <div class="modal-close-hint">✕ Закрыть</div>
     <img id="modal-img" src="" alt="Увеличенное изображение">
@@ -723,11 +730,16 @@
       if (loader) loader.classList.remove('active');
     }
 
-    function openImageModalUrl(imgSrc) {
+    function openImageModal(event, boxEl) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      const imgEl = boxEl.querySelector('img');
       const modal = document.getElementById('image-modal');
       const modalImg = document.getElementById('modal-img');
-      if (modal && modalImg) {
-        modalImg.src = imgSrc;
+      if (modal && modalImg && imgEl) {
+        modalImg.src = imgEl.src;
         modal.classList.add('active');
         if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
       }
@@ -920,9 +932,11 @@
       let html = `<div class="card-view-container">`;
       if (data.images && data.images.length > 0) {
         data.images.forEach(imgSrc => {
-          // ИСПОЛЬЗУЕМ ФОНОВЫЙ БЛОК ВМЕСТО ТЕГА IMG, ЧТОБЫ ТЕЛЕГРАМ НЕ ПЕРЕХВАТЫВАЛ КЛИК
+          // КОНТЕЙНЕР С БЛОКИРОВКОЙ СОБЫТИЙ ТЕЛЕГРАМА И ВЫЗОВОМ МОДАЛКИ
           html += `
-            <div class="card-view-img-bg" style="background-image: url('${imgSrc}');" onclick="openImageModalUrl('${imgSrc}')" title="Нажмите для увеличения"></div>
+            <div class="card-view-img-box" onclick="openImageModal(event, this)">
+              <img src="${imgSrc}" alt="Карточка боя" style="pointer-events: none;">
+            </div>
           `;
         });
       }
