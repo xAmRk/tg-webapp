@@ -218,7 +218,6 @@
       height: 100%;
       object-fit: cover;
       background-color: #1e293b;
-      pointer-events: none;
     }
     .hero-card .hero-label {
       position: relative;
@@ -408,27 +407,24 @@
       padding: 12px;
     }
 
-    /* Экран просмотра карточки позиции */
+    /* Экран просмотра карточки позиции (БЕЗ ТЕГА IMG, ЧЕРЕЗ ФОНОВЫЙ БЛОК) */
     .card-view-container {
       display: flex;
       flex-direction: column;
       gap: 12px;
       padding-bottom: 30px;
     }
-    .img-zoom-wrapper {
+    .card-view-img-bg {
       width: 100%;
+      aspect-ratio: 16 / 9;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-color: #0b1120;
       border-radius: 12px;
-      overflow: hidden;
       border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
       cursor: zoom-in;
-      position: relative;
-    }
-    .img-zoom-wrapper img {
-      width: 100%;
-      height: auto;
-      display: block;
-      pointer-events: none;
     }
     .card-kb-container {
       display: flex;
@@ -727,12 +723,11 @@
       if (loader) loader.classList.remove('active');
     }
 
-    function openImageModal(wrapperEl) {
-      const imgEl = wrapperEl.querySelector('img');
+    function openImageModalUrl(imgSrc) {
       const modal = document.getElementById('image-modal');
       const modalImg = document.getElementById('modal-img');
-      if (modal && modalImg && imgEl) {
-        modalImg.src = imgEl.src;
+      if (modal && modalImg) {
+        modalImg.src = imgSrc;
         modal.classList.add('active');
         if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
       }
@@ -925,10 +920,9 @@
       let html = `<div class="card-view-container">`;
       if (data.images && data.images.length > 0) {
         data.images.forEach(imgSrc => {
+          // ИСПОЛЬЗУЕМ ФОНОВЫЙ БЛОК ВМЕСТО ТЕГА IMG, ЧТОБЫ ТЕЛЕГРАМ НЕ ПЕРЕХВАТЫВАЛ КЛИК
           html += `
-            <div class="img-zoom-wrapper" onclick="openImageModal(this)">
-              <img src="${imgSrc}" alt="Карточка боя">
-            </div>
+            <div class="card-view-img-bg" style="background-image: url('${imgSrc}');" onclick="openImageModalUrl('${imgSrc}')" title="Нажмите для увеличения"></div>
           `;
         });
       }
