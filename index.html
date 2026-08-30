@@ -407,40 +407,22 @@
       padding: 12px;
     }
 
-    /* Экран просмотра карточки позиции (контейнер с оберткой для зума) */
+    /* Экран просмотра карточки позиции */
     .card-view-container {
       display: flex;
       flex-direction: column;
       gap: 12px;
       padding-bottom: 30px;
     }
-    .img-zoom-wrapper {
-      position: relative;
-      width: 100%;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-      cursor: pointer;
-    }
-    .img-zoom-wrapper img {
+    .card-view-img {
       width: 100%;
       height: auto;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
       display: block;
+      cursor: zoom-in;
     }
-    .img-zoom-wrapper::after {
-      content: "🔍 Нажмите для увеличения";
-      position: absolute;
-      bottom: 8px;
-      right: 8px;
-      background: rgba(0, 0, 0, 0.7);
-      color: #38bdf8;
-      padding: 4px 8px;
-      font-size: 10px;
-      border-radius: 6px;
-      pointer-events: none;
-    }
-    
     .card-kb-container {
       display: flex;
       flex-direction: column;
@@ -498,39 +480,6 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-
-    /* Наше кастомное модальное окно на весь экран */
-    #image-modal {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.95);
-      display: none;
-      justify-content: center;
-      align-items: flex-start;
-      overflow: auto;
-      z-index: 100000;
-      padding: 20px 10px;
-    }
-    #image-modal.active { display: flex; }
-    #image-modal img {
-      width: 100%;
-      height: auto;
-      display: block;
-      border-radius: 6px;
-    }
-    .modal-close-hint {
-      position: fixed;
-      top: 10px;
-      right: 15px;
-      background: rgba(255, 255, 255, 0.2);
-      color: #fff;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      cursor: pointer;
-      z-index: 100001;
-      backdrop-filter: blur(4px);
-    }
   </style>
 </head>
 <body>
@@ -539,12 +488,6 @@
   <div id="app-loader">
     <div class="app-spinner"></div>
     <div id="loader-text">Загрузка...</div>
-  </div>
-
-  <!-- Модальное окно для увеличенного просмотра картинок -->
-  <div id="image-modal" onclick="closeImageModal()">
-    <div class="modal-close-hint">✕ Закрыть</div>
-    <img id="modal-img" src="" alt="Увеличенное изображение" onclick="event.stopPropagation()">
   </div>
 
   <!-- 1. Главная страница -->
@@ -738,21 +681,9 @@
       if (loader) loader.classList.remove('active');
     }
 
-    function openImageModal(imgSrc) {
-      const modal = document.getElementById('image-modal');
-      const modalImg = document.getElementById('modal-img');
-      if (modal && modalImg) {
-        modalImg.src = imgSrc;
-        modal.classList.add('active');
-        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-      }
-    }
-
-    function closeImageModal() {
-      const modal = document.getElementById('image-modal');
-      if (modal) {
-        modal.classList.remove('active');
-      }
+    function openImageInNewTab(imgSrc) {
+      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+      window.open(imgSrc, '_blank');
     }
 
     function navigateTo(pageId) {
@@ -935,11 +866,7 @@
       let html = `<div class="card-view-container">`;
       if (data.images && data.images.length > 0) {
         data.images.forEach(imgSrc => {
-          html += `
-            <div class="img-zoom-wrapper" onclick="openImageModal('${imgSrc}')">
-              <img src="${imgSrc}" alt="Карточка боя">
-            </div>
-          `;
+          html += `<img class="card-view-img" src="${imgSrc}" alt="Карточка боя" onclick="openImageInNewTab('${imgSrc}')" title="Нажмите, чтобы открыть в полном размере">`;
         });
       }
       if (data.messages && data.messages.length > 0) {
@@ -1077,7 +1004,7 @@
       { name: "Сорвиголова",        classes: ["Стрелок"], img: "images/сорвиголова.png" },
       { name: "Судья",              classes: ["Поддержка", "Маг"], img: "images/судья.png" },
       { name: "Темная Звезда",      classes: ["Стрелок", "Контроль"], img: "images/темная звезда.png" },
-      { name: "Темпус",             classes: ["Поддержка", "Маг"], img: "images/tempus" },
+      { name: "Темпус",             classes: ["Поддержка", "Маг"], img: "images/темпус.png" },
       { name: "Тесак",              classes: ["Танк", "Контроль"], img: "images/тесак.png" },
       { name: "Тея",                classes: ["Целитель", "Поддержка"], img: "images/тея.png" },
       { name: "Тристан",            classes: ["Боец"], img: "images/тристан.png" },
