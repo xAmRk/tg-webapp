@@ -978,6 +978,9 @@
         btn.classList.add('sent');
       }
 
+      // Показываем заглушку загрузки на время ожидания ответа сервера
+      showLoader("Генерация результата...");
+
       try {
         await fetch(SERVER_URL, {
           method: 'POST',
@@ -991,6 +994,8 @@
         });
       } catch (e) {
         console.error("Callback error:", e);
+      } finally {
+        hideLoader();
       }
 
       if (tg) {
