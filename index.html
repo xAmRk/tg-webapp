@@ -429,7 +429,7 @@
       width: 100%;
       height: auto;
       display: block;
-      pointer-events: none; /* Запрещаем Telegram перехватывать клик */
+      pointer-events: none;
     }
 
     .card-kb-container {
@@ -966,24 +966,20 @@
 
     async function sendCardCallback(callbackData, btnId, btnText) {
       const btn = document.getElementById(btnId);
-      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
 
       if (callbackData === 'webapp_back_to_prev') {
         navigateTo('page-vg-targets');
         return;
       }
 
-      if (callbackData.startsWith('train_') || callbackData.startsWith('trainvg_') || callbackData.startsWith('stp:') || callbackData.startsWith('trainany_')) {
-        if (btn) {
-          btn.textContent = `✓ ${btnText || btn.textContent}`;
-          btn.classList.add('sent');
-        }
-        if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+      if (btn) {
+        btn.textContent = `✓ ${btnText || btn.textContent}`;
+        btn.classList.add('sent');
       }
 
-      showLoader("Обработка...");
       try {
-        const response = await fetch(SERVER_URL, {
+        await fetch(SERVER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -993,19 +989,12 @@
             callback_data: callbackData
           })
         });
-
-        const data = await response.json();
-        if (data.ok) {
-          if (data.action === 'go_back') {
-            navigateTo('page-vg-targets');
-          } else {
-            renderCardViewPayload(data);
-          }
-        }
       } catch (e) {
         console.error("Callback error:", e);
-      } finally {
-        hideLoader();
+      }
+
+      if (tg) {
+        tg.close();
       }
     }
 
