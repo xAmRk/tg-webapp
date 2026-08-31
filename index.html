@@ -932,7 +932,6 @@
       let html = `<div class="card-view-container">`;
       if (data.images && data.images.length > 0) {
         data.images.forEach(imgSrc => {
-          // КОНТЕЙНЕР С БЛОКИРОВКОЙ СОБЫТИЙ ТЕЛЕГРАМА И ВЫЗОВОМ МОДАЛКИ
           html += `
             <div class="card-view-img-box" onclick="openImageModal(event, this)">
               <img src="${imgSrc}" alt="Карточка боя" style="pointer-events: none;">
