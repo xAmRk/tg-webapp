@@ -500,7 +500,7 @@
       </div>
     </div>
 
-    <div class="footer-version">@sverh_alpha_bot • v2.3.2</div>
+    <div class="footer-version">@sverh_alpha_bot • v2.3.4</div>
   </div>
 
   <div id="page-vg-targets" class="page">
@@ -814,7 +814,7 @@
         if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
         if (tg) tg.close();
       } catch (err) {
-        alert("Ошибка связи с сервером при отправке карточки: " + err);
+        alert("Ошибка связи с сервером: " + err);
       } finally {
         hideLoader();
       }
