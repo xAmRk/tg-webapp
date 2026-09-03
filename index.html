@@ -500,7 +500,7 @@
       </div>
     </div>
 
-    <div class="footer-version">@sverh_alpha_bot • v2.3.1</div>
+    <div class="footer-version">@sverh_alpha_bot • v2.3.2</div>
   </div>
 
   <div id="page-vg-targets" class="page">
@@ -750,7 +750,7 @@
 
         if (t1 && (t1.is_last_attacks || t1.text === "My last attacks")) {
           html += `
-            <div class="vg-card-slot vg-single-btn" onclick="sendPlayerToChat('${t1.const_id}', '${t1.kind}', '${t1.guild_id}', true, '${t1.callback_data}', ${isGc})">
+            <div class="vg-card-slot vg-single-btn" onclick="sendPlayerToChat('${t1.const_id || ''}', '${t1.kind || 'hero'}', '${t1.guild_id || ''}', true, '${t1.callback_data || ''}', ${isGc})">
               <span style="font-weight: 700; color: #38bdf8;">📊 ${t1.text}</span>
             </div>
           `;
@@ -763,7 +763,7 @@
 
         html += `<div class="vg-row-pair">`;
         html += `
-          <div class="vg-card-slot" onclick="sendPlayerToChat('${t1.const_id}', '${t1.kind}', '${t1.guild_id}', false, '${t1.callback_data}', ${isGc})">
+          <div class="vg-card-slot" onclick="sendPlayerToChat('${t1.const_id || ''}', '${t1.kind || 'hero'}', '${t1.guild_id || ''}', false, '${t1.callback_data || ''}', ${isGc})">
             <span class="vg-badge">${slot1}</span>
             <span class="vg-name">${nick1}</span>
           </div>
@@ -772,7 +772,7 @@
         if (t2) {
           const isTitan = t2.text.toLowerCase().includes('титан') || t2.text.toLowerCase().includes('titan');
           html += `
-            <div class="vg-card-slot" onclick="sendPlayerToChat('${t2.const_id}', '${t2.kind}', '${t2.guild_id}', false, '${t2.callback_data}', ${isGc})">
+            <div class="vg-card-slot" onclick="sendPlayerToChat('${t2.const_id || ''}', '${t2.kind || 'hero'}', '${t2.guild_id || ''}', false, '${t2.callback_data || ''}', ${isGc})">
               <span class="vg-badge ${isTitan ? 'vg-badge-titan' : ''}">${t2.text}</span>
               <span class="vg-name" style="color: var(--hint); font-size: 11px;">${isTitan ? 'Титаны' : ''}</span>
             </div>
@@ -807,18 +807,17 @@
 
         const resData = await response.json();
         if (!resData.ok) {
-          alert(resData.error || "Ошибка отправки карточки");
+          alert("Ошибка: " + (resData.error || "Не удалось отправить карточку"));
           return;
         }
 
         if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        if (tg) tg.close();
       } catch (err) {
-        console.error("Fetch error:", err);
+        alert("Ошибка связи с сервером при отправке карточки: " + err);
       } finally {
         hideLoader();
       }
-
-      if (tg) tg.close();
     }
 
     const HEROES = [
