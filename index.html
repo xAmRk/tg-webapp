@@ -596,7 +596,7 @@
       </div>
     </div>
 
-    <div class="footer-version">@sverh_alpha_bot • v2.2.1</div>
+    <div class="footer-version">@sverh_alpha_bot • v2.2.2</div>
   </div>
 
   <!-- Экран списка соперников -->
@@ -707,11 +707,6 @@
   </div>
 
   <script>
-    // Временно отключен ServiceWorker, чтобы Telegram не кэшировал старый HTML
-    // if ('serviceWorker' in navigator) {
-    //   navigator.serviceWorker.register('sw.js').catch(console.error);
-    // }
-
     const tg = window.Telegram?.WebApp || null;
     if (tg) {
       try {
