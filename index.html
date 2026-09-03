@@ -408,63 +408,6 @@
       padding: 12px;
     }
 
-    .card-view-container {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding-bottom: 30px;
-    }
-    
-    .card-view-img-box {
-      width: 100%;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-      background-color: #0b1120;
-      cursor: zoom-in;
-    }
-    .card-view-img-box img {
-      width: 100%;
-      height: auto;
-      display: block;
-      pointer-events: none;
-    }
-
-    .card-kb-container {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-top: 10px;
-      background: #111827;
-      padding: 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .card-kb-row {
-      display: flex;
-      gap: 6px;
-      width: 100%;
-    }
-    .card-action-btn {
-      flex: 1;
-      background: #1e293b;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #f8fafc;
-      border-radius: 8px;
-      padding: 9px 2px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      transition: all 0.15s ease;
-    }
-    .card-action-btn:active { background: #38bdf8; color: #0f172a; transform: scale(0.96); }
-    .card-action-btn.sent { background: #22c55e; border-color: #22c55e; color: #fff; }
-
     #app-loader {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -488,39 +431,6 @@
       100% { transform: rotate(360deg); }
     }
 
-    #image-modal {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.98);
-      display: none;
-      overflow-y: auto;
-      overflow-x: hidden;
-      z-index: 100000;
-      padding: 50px 10px 30px 10px;
-      text-align: center;
-    }
-    #image-modal.active { display: block; }
-    #image-modal img {
-      width: 100%;
-      height: auto;
-      display: block;
-      border-radius: 4px;
-    }
-    .modal-close-hint {
-      position: fixed;
-      top: 10px;
-      right: 15px;
-      background: rgba(255, 255, 255, 0.25);
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      z-index: 100001;
-      backdrop-filter: blur(4px);
-    }
-
     .footer-version {
       text-align: center;
       font-size: 11px;
@@ -535,11 +445,6 @@
   <div id="app-loader">
     <div class="app-spinner"></div>
     <div id="loader-text">Загрузка...</div>
-  </div>
-
-  <div id="image-modal" onclick="closeImageModal()">
-    <div class="modal-close-hint">✕ Закрыть</div>
-    <img id="modal-img" src="" alt="Увеличенное изображение">
   </div>
 
   <!-- Главный экран -->
@@ -596,10 +501,10 @@
       </div>
     </div>
 
-    <div class="footer-version">@sverh_alpha_bot • v2.2.2</div>
+    <div class="footer-version">@sverh_alpha_bot • v2.3.0</div>
   </div>
 
-  <!-- Экран списка соперников -->
+  <!-- Экран списка соперников (общий для ВГ и МС) -->
   <div id="page-vg-targets" class="page">
     <div class="top-nav">
       <button class="back-btn" onclick="navigateTo('page-main')">‹ Меню</button>
@@ -611,22 +516,6 @@
     <div id="vgTargetsContent">
       <div style="text-align: center; padding: 40px 0; color: var(--hint);">
         Загрузка карты... ⏳
-      </div>
-    </div>
-  </div>
-
-  <!-- Экран карточки позиции -->
-  <div id="page-card-view" class="page">
-    <div class="top-nav">
-      <button class="back-btn" id="cardViewBackBtn" onclick="navigateTo('page-vg-targets')">‹ Назад</button>
-      <div class="slots-title" style="flex-grow: 1;">
-        <span id="cardViewTitle">Карточка позиции</span>
-      </div>
-    </div>
-
-    <div id="cardViewContent">
-      <div style="text-align: center; padding: 40px 0; color: var(--hint);">
-        Формирование карточки... ⏳
       </div>
     </div>
   </div>
@@ -731,28 +620,6 @@
       if (loader) loader.classList.remove('active');
     }
 
-    function openImageModal(event, boxEl) {
-      if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-      const imgEl = boxEl.querySelector('img');
-      const modal = document.getElementById('image-modal');
-      const modalImg = document.getElementById('modal-img');
-      if (modal && modalImg && imgEl) {
-        modalImg.src = imgEl.src;
-        modal.classList.add('active');
-        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-      }
-    }
-
-    function closeImageModal() {
-      const modal = document.getElementById('image-modal');
-      if (modal) {
-        modal.classList.remove('active');
-      }
-    }
-
     function navigateTo(pageId) {
       if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -765,9 +632,6 @@
         } else if (pageId === 'page-vg-targets') {
           tg.BackButton.show();
           tg.BackButton.onClick(() => navigateTo('page-main'));
-        } else if (pageId === 'page-card-view') {
-          tg.BackButton.show();
-          tg.BackButton.onClick(() => navigateTo('page-vg-targets'));
         } else if (pageId === 'page-results') {
           tg.BackButton.show();
           tg.BackButton.onClick(() => navigateTo('page-heroes'));
@@ -890,7 +754,7 @@
 
         if (t1 && (t1.is_last_attacks || t1.text === "My last attacks")) {
           html += `
-            <div class="vg-card-slot vg-single-btn" onclick="openPlayerCard('${t1.const_id}', '${t1.kind}', '${t1.guild_id}', true, 'My last attacks', '${t1.callback_data}', ${isGc})">
+            <div class="vg-card-slot vg-single-btn" onclick="sendPlayerToChat('${t1.const_id}', '${t1.kind}', '${t1.guild_id}', true, '${t1.callback_data}', ${isGc})">
               <span style="font-weight: 700; color: #38bdf8;">📊 ${t1.text}</span>
             </div>
           `;
@@ -903,7 +767,7 @@
 
         html += `<div class="vg-row-pair">`;
         html += `
-          <div class="vg-card-slot" onclick="openPlayerCard('${t1.const_id}', '${t1.kind}', '${t1.guild_id}', false, '${t1.text}', '${t1.callback_data}', ${isGc})">
+          <div class="vg-card-slot" onclick="sendPlayerToChat('${t1.const_id}', '${t1.kind}', '${t1.guild_id}', false, '${t1.callback_data}', ${isGc})">
             <span class="vg-badge">${slot1}</span>
             <span class="vg-name">${nick1}</span>
           </div>
@@ -912,7 +776,7 @@
         if (t2) {
           const isTitan = t2.text.toLowerCase().includes('титан') || t2.text.toLowerCase().includes('titan');
           html += `
-            <div class="vg-card-slot" onclick="openPlayerCard('${t2.const_id}', '${t2.kind}', '${t2.guild_id}', false, '${t2.text}', '${t2.callback_data}', ${isGc})">
+            <div class="vg-card-slot" onclick="sendPlayerToChat('${t2.const_id}', '${t2.kind}', '${t2.guild_id}', false, '${t2.callback_data}', ${isGc})">
               <span class="vg-badge ${isTitan ? 'vg-badge-titan' : ''}">${t2.text}</span>
               <span class="vg-name" style="color: var(--hint); font-size: 11px;">${isTitan ? 'Титаны' : ''}</span>
             </div>
@@ -925,118 +789,33 @@
       container.innerHTML = html;
     }
 
-    async function openPlayerCard(constId, kind, guildId, isLastAttacks, titleText, callbackData, isGc) {
+    // Клик отправляет карточку соперника прямо в чат Telegram и закрывает окно WebApp
+    async function sendPlayerToChat(constId, kind, guildId, isLastAttacks, callbackData, isGc) {
       if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-      navigateTo('page-card-view');
-      document.getElementById('cardViewTitle').textContent = titleText || "Карточка позиции";
-      const container = document.getElementById('cardViewContent');
-      container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--hint);">Формирование карточки... ⏳</div>`;
-
-      showLoader("Формирование карточки...");
+      showLoader("Отправляю карточку в чат...");
       try {
-        const actionType = isGc ? 'open_gc_player' : 'open_vg_player';
-        const response = await fetch(SERVER_URL, {
+        await fetch(SERVER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            action: actionType,
+            action: 'send_player_to_chat',
             user_id: getUserId(),
             init_data: tg?.initData || '',
             const_id: constId,
             kind: kind,
             guild_id: guildId,
             callback_data: callbackData,
-            is_last_attacks: isLastAttacks
+            is_last_attacks: isLastAttacks,
+            is_gc: isGc
           })
         });
-
-        const data = await response.json();
-        if (!data.ok) {
-          container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">${data.error || 'Не удалось загрузить карточку'}</div>`;
-          return;
-        }
-
-        renderCardViewPayload(data);
       } catch (err) {
-        container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">Ошибка соединения с сервером</div>`;
-      } finally {
-        hideLoader();
-      }
-    }
-
-    function renderCardViewPayload(data) {
-      const container = document.getElementById('cardViewContent');
-      let html = `<div class="card-view-container">`;
-      if (data.images && data.images.length > 0) {
-        data.images.forEach(imgSrc => {
-          html += `
-            <div class="card-view-img-box" onclick="openImageModal(event, this)">
-              <img src="${imgSrc}" alt="Карточка боя" style="pointer-events: none;">
-            </div>
-          `;
-        });
-      }
-      if (data.messages && data.messages.length > 0) {
-        data.messages.forEach(msg => {
-          html += `<div style="background: #1e293b; padding: 12px; border-radius: 10px; font-size: 12px; line-height: 1.4; white-space: pre-line; margin-bottom: 8px;">${msg}</div>`;
-        });
-      }
-      if (data.button_rows && data.button_rows.length > 0) {
-        html += `<div class="card-kb-container">`;
-        data.button_rows.forEach((row, rIdx) => {
-          html += `<div class="card-kb-row">`;
-          row.forEach((btn, bIdx) => {
-            const btnId = `cbtn-${rIdx}-${bIdx}`;
-            html += `
-              <button class="card-action-btn" id="${btnId}" onclick="sendCardCallback('${btn.callback_data}', '${btnId}', '${btn.text}')">
-                ${btn.text}
-              </button>
-            `;
-          });
-          html += `</div>`;
-        });
-        html += `</div>`;
-      }
-      html += `</div>`;
-      container.innerHTML = html;
-    }
-
-    async function sendCardCallback(callbackData, btnId, btnText) {
-      const btn = document.getElementById(btnId);
-      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-
-      if (callbackData === 'webapp_back_to_prev') {
-        navigateTo('page-vg-targets');
-        return;
-      }
-
-      if (btn) {
-        btn.textContent = `✓ ${btnText || btn.textContent}`;
-        btn.classList.add('sent');
-      }
-
-      showLoader("Генерация результата...");
-
-      try {
-        await fetch(SERVER_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'send_card_callback',
-            user_id: getUserId(),
-            init_data: tg?.initData || '',
-            callback_data: callbackData
-          })
-        });
-      } catch (e) {
-        console.error("Callback error:", e);
+        console.error("Fetch error:", err);
       } finally {
         hideLoader();
       }
 
-      if (tg) {
-        tg.close();
-      }
+      if (tg) tg.close();
     }
 
     const HEROES = [
