@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Панель управления</title>
   <script src="telegram-web-app.js"></script>
   <style>
@@ -36,8 +39,21 @@
     .page.active { display: block; }
 
     .header { margin-bottom: 18px; text-align: center; }
-    .header h2 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; }
-    .header p { margin: 0; font-size: 13px; color: var(--hint); }
+    .header h2 { margin: 0 0 4px 0; font-size: 20px; font-weight: 700; }
+    .header p { margin: 0 0 6px 0; font-size: 13px; color: var(--hint); }
+
+    .version-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-family: monospace;
+      font-weight: 600;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 2px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
 
     .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
     .card-btn {
@@ -517,6 +533,14 @@
       z-index: 100001;
       backdrop-filter: blur(4px);
     }
+
+    .footer-version {
+      text-align: center;
+      font-size: 11px;
+      color: var(--hint);
+      padding: 18px 0 10px 0;
+      font-family: monospace;
+    }
   </style>
 </head>
 <body>
@@ -531,10 +555,12 @@
     <img id="modal-img" src="" alt="Увеличенное изображение">
   </div>
 
+  <!-- Главный экран -->
   <div id="page-main" class="page active">
     <div class="header">
       <h2>Панель управления</h2>
       <p>Выберите команду или действие</p>
+      <div class="version-tag">v2.2.0 (MC/VG Ready)</div>
     </div>
 
     <div class="grid">
@@ -583,8 +609,11 @@
         <div class="arrow">›</div>
       </div>
     </div>
+
+    <div class="footer-version">@sverh_alpha_bot • v2.2.0</div>
   </div>
 
+  <!-- Экран списка соперников -->
   <div id="page-vg-targets" class="page">
     <div class="top-nav">
       <button class="back-btn" onclick="navigateTo('page-main')">‹ Меню</button>
@@ -600,6 +629,7 @@
     </div>
   </div>
 
+  <!-- Экран карточки позиции -->
   <div id="page-card-view" class="page">
     <div class="top-nav">
       <button class="back-btn" id="cardViewBackBtn" onclick="navigateTo('page-vg-targets')">‹ Назад</button>
@@ -615,6 +645,7 @@
     </div>
   </div>
 
+  <!-- Экран выбора героев -->
   <div id="page-heroes" class="page">
     <div class="slots-container">
       <div class="top-nav">
@@ -672,6 +703,7 @@
     </div>
   </div>
 
+  <!-- Экран результатов подбора STP -->
   <div id="page-results" class="page">
     <div class="top-nav">
       <button class="back-btn" onclick="navigateTo('page-heroes')">‹ К героям</button>
@@ -689,9 +721,10 @@
   </div>
 
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(console.error);
-    }
+    // Временно отключен ServiceWorker, чтобы Telegram не кэшировал старый HTML
+    // if ('serviceWorker' in navigator) {
+    //   navigator.serviceWorker.register('sw.js').catch(console.error);
+    // }
 
     const tg = window.Telegram?.WebApp || null;
     if (tg) {
@@ -800,6 +833,7 @@
       if (action === 'quick_command' && tg) tg.close();
     }
 
+    // ================== ВГ ЛОГИКА ==================
     async function openTodayGwScreen() {
       navigateTo('page-vg-targets');
       const container = document.getElementById('vgTargetsContent');
@@ -832,6 +866,7 @@
       }
     }
 
+    // ================== МС ЛОГИКА ==================
     async function openTodayGcScreen() {
       navigateTo('page-vg-targets');
       const container = document.getElementById('vgTargetsContent');
