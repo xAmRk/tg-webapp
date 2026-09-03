@@ -222,7 +222,7 @@
       object-fit: cover;
       background-color: #1e293b;
     }
-    .hero-card .hero-label {
+    .hero-label {
       position: relative;
       z-index: 2;
       width: 100%;
@@ -447,7 +447,6 @@
     <div id="loader-text">Загрузка...</div>
   </div>
 
-  <!-- Главный экран -->
   <div id="page-main" class="page active">
     <div class="header">
       <h2>Панель управления</h2>
@@ -501,10 +500,9 @@
       </div>
     </div>
 
-    <div class="footer-version">@sverh_alpha_bot • v2.3.0</div>
+    <div class="footer-version">@sverh_alpha_bot • v2.3.1</div>
   </div>
 
-  <!-- Экран списка соперников (общий для ВГ и МС) -->
   <div id="page-vg-targets" class="page">
     <div class="top-nav">
       <button class="back-btn" onclick="navigateTo('page-main')">‹ Меню</button>
@@ -520,7 +518,6 @@
     </div>
   </div>
 
-  <!-- Экран выбора героев -->
   <div id="page-heroes" class="page">
     <div class="slots-container">
       <div class="top-nav">
@@ -578,7 +575,6 @@
     </div>
   </div>
 
-  <!-- Экран результатов подбора STP -->
   <div id="page-results" class="page">
     <div class="top-nav">
       <button class="back-btn" onclick="navigateTo('page-heroes')">‹ К героям</button>
@@ -789,12 +785,11 @@
       container.innerHTML = html;
     }
 
-    // Клик отправляет карточку соперника прямо в чат Telegram и закрывает окно WebApp
     async function sendPlayerToChat(constId, kind, guildId, isLastAttacks, callbackData, isGc) {
       if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
       showLoader("Отправляю карточку в чат...");
       try {
-        await fetch(SERVER_URL, {
+        const response = await fetch(SERVER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -809,6 +804,14 @@
             is_gc: isGc
           })
         });
+
+        const resData = await response.json();
+        if (!resData.ok) {
+          alert(resData.error || "Ошибка отправки карточки");
+          return;
+        }
+
+        if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
       } catch (err) {
         console.error("Fetch error:", err);
       } finally {
