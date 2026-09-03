@@ -344,7 +344,7 @@
     .relic-13 { color: #a534ff !important; font-weight: 600; }
     .relic-14 { color: #ffa500 !important; font-weight: 700; }
 
-    /* Дизайн экрана позиций ВГ */
+    /* Дизайн экрана позиций */
     .vg-list-container {
       display: flex;
       flex-direction: column;
@@ -565,11 +565,11 @@
         <div class="arrow">›</div>
       </div>
 
-      <div class="card-btn" onclick="sendAction('quick_command', { command: '/find_today_gc' })">
+      <div class="card-btn" onclick="openTodayGcScreen()">
         <div class="icon-box icon-purple">🏆</div>
         <div class="content">
           <div class="title">Соперники МС</div>
-          <div class="command">/find_today_gc</div>
+          <div class="command">Сетка позиций МС</div>
         </div>
         <div class="arrow">›</div>
       </div>
@@ -594,23 +594,23 @@
     </div>
   </div>
 
-  <!-- 2. Экран выбора соперников ВГ -->
+  <!-- 2. Экран выбора соперников -->
   <div id="page-vg-targets" class="page">
     <div class="top-nav">
       <button class="back-btn" onclick="navigateTo('page-main')">‹ Меню</button>
       <div class="slots-title" style="flex-grow: 1;">
-        <span id="vgGuildTitle">⚔️ Соперники ВГ</span>
+        <span id="vgGuildTitle">⚔️ Соперники</span>
       </div>
     </div>
 
     <div id="vgTargetsContent">
       <div style="text-align: center; padding: 40px 0; color: var(--hint);">
-        Загрузка карты ВГ... ⏳
+        Загрузка карты... ⏳
       </div>
     </div>
   </div>
 
-  <!-- 3. Экран просмотра карточки позиции ВГ в WebApp -->
+  <!-- 3. Экран просмотра карточки позиции в WebApp -->
   <div id="page-card-view" class="page">
     <div class="top-nav">
       <button class="back-btn" onclick="navigateTo('page-vg-targets')">‹ Назад</button>
@@ -813,10 +813,11 @@
       if (action === 'quick_command' && tg) tg.close();
     }
 
+    // ========== ВГ ФУНКЦИИ (СТРОГО ИЗОЛИРОВАНЫ) ==========
     async function openTodayGwScreen() {
       navigateTo('page-vg-targets');
       const container = document.getElementById('vgTargetsContent');
-      container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--hint);">Ищу гильдию соперника... ⏳</div>`;
+      container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--hint);">Ищу гильдию соперника ВГ... ⏳</div>`;
 
       showLoader("Загрузка соперников ВГ...");
       try {
@@ -875,17 +876,17 @@
         `;
 
         if (t2) {
+          const isTitan = t2.text.toLowerCase().includes('титан') || t2.text.toLowerCase().includes('titan');
           html += `
             <div class="vg-card-slot" onclick="openVgCard('${t2.const_id}', '${t2.kind}', '${t2.guild_id}', false, '${t2.text}')">
-              <span class="vg-badge vg-badge-titan">${t2.text}</span>
-              <span class="vg-name" style="color: var(--hint); font-size: 11px;">Титаны</span>
+              <span class="vg-badge ${isTitan ? 'vg-badge-titan' : ''}">${t2.text}</span>
+              <span class="vg-name" style="color: var(--hint); font-size: 11px;">${isTitan ? 'Титаны' : ''}</span>
             </div>
           `;
         }
 
         html += `</div>`;
       }
-
       html += `</div>`;
       container.innerHTML = html;
     }
@@ -893,11 +894,11 @@
     async function openVgCard(constId, kind, guildId, isLastAttacks = false, titleText = "") {
       if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
       navigateTo('page-card-view');
-      document.getElementById('cardViewTitle').textContent = titleText || "Карточка позиции";
+      document.getElementById('cardViewTitle').textContent = titleText || "Карточка позиции ВГ";
       const container = document.getElementById('cardViewContent');
-      container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--hint);">Формирование карточки... ⏳</div>`;
+      container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--hint);">Формирование карточки ВГ... ⏳</div>`;
 
-      showLoader("Формирование карточки...");
+      showLoader("Формирование карточки ВГ...");
       try {
         const response = await fetch(SERVER_URL, {
           method: 'POST',
@@ -915,7 +916,7 @@
 
         const data = await response.json();
         if (!data.ok) {
-          container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">${data.error || 'Не удалось загрузить карточку'}</div>`;
+          container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">${data.error || 'Не удалось загрузить карточку ВГ'}</div>`;
           return;
         }
 
@@ -927,6 +928,121 @@
       }
     }
 
+    // ========== МС ФУНКЦИИ (АНАЛОГИ ВГ, НО СВОЙ ENDPOINT) ==========
+    async function openTodayGcScreen() {
+      navigateTo('page-vg-targets');
+      const container = document.getElementById('vgTargetsContent');
+      container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--hint);">Ищу гильдию соперника МС... ⏳</div>`;
+
+      showLoader("Загрузка соперников МС...");
+      try {
+        const response = await fetch(SERVER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'get_today_gc',
+            user_id: getUserId(),
+            init_data: tg?.initData || ''
+          })
+        });
+
+        const data = await response.json();
+        if (!data.ok) {
+          container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">${data.error || 'Ошибка загрузки МС'}</div>`;
+          return;
+        }
+
+        document.getElementById('vgGuildTitle').textContent = `🏆 ${data.guild_name}`;
+        renderGcTargetsList(data.targets);
+      } catch (err) {
+        container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">Ошибка соединения с сервером</div>`;
+      } finally {
+        hideLoader();
+      }
+    }
+
+    function renderGcTargetsList(targets) {
+      const container = document.getElementById('vgTargetsContent');
+      let html = `<div class="vg-list-container">`;
+
+      for (let i = 0; i < targets.length; i += 2) {
+        const t1 = targets[i];
+        const t2 = targets[i + 1];
+
+        if (t1 && (t1.is_last_attacks || t1.text === "My last attacks")) {
+          html += `
+            <div class="vg-card-slot vg-single-btn" onclick="openGcCard('${t1.callback_data}', '${t1.guild_id}', true, 'My last attacks')">
+              <span style="font-weight: 700; color: #38bdf8;">📊 ${t1.text}</span>
+            </div>
+          `;
+          break;
+        }
+
+        const p1 = t1.text.split(' ');
+        const slot1 = p1[0];
+        const nick1 = p1.slice(1).join(' ');
+
+        html += `<div class="vg-row-pair">`;
+        html += `
+          <div class="vg-card-slot" onclick="openGcCard('${t1.callback_data}', '${t1.guild_id}', false, '${t1.text}')">
+            <span class="vg-badge">${slot1}</span>
+            <span class="vg-name">${nick1}</span>
+          </div>
+        `;
+
+        if (t2) {
+          const isTitan = t2.text.toLowerCase().includes('титан') || t2.text.toLowerCase().includes('titan');
+          html += `
+            <div class="vg-card-slot" onclick="openGcCard('${t2.callback_data}', '${t2.guild_id}', false, '${t2.text}')">
+              <span class="vg-badge ${isTitan ? 'vg-badge-titan' : ''}">${t2.text}</span>
+              <span class="vg-name" style="color: var(--hint); font-size: 11px;">${isTitan ? 'Титаны' : ''}</span>
+            </div>
+          `;
+        }
+
+        html += `</div>`;
+      }
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    async function openGcCard(callbackData, guildId, isLastAttacks = false, titleText = "") {
+      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+      navigateTo('page-card-view');
+      document.getElementById('cardViewTitle').textContent = titleText || "Карточка позиции МС";
+      const container = document.getElementById('cardViewContent');
+      container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--hint);">Формирование карточки МС... ⏳</div>`;
+
+      showLoader("Формирование карточки МС...");
+      try {
+        const response = await fetch(SERVER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'open_gc_player',
+            user_id: getUserId(),
+            init_data: tg?.initData || '',
+            callback_data: callbackData,
+            guild_id: guildId,
+            is_last_attacks: isLastAttacks
+          })
+        });
+
+        const data = await response.json();
+        if (!data.ok) {
+          container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">${data.error || 'Не удалось загрузить карточку МС'}</div>`;
+          return;
+        }
+
+        renderCardViewPayload(data);
+      } catch (err) {
+        container.innerHTML = `<div style="text-align: center; padding: 40px 0; color: #ef4444;">Ошибка соединения с сервером</div>`;
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // ========== ОБЩИЙ РЕНДЕР КАРТОЧКИ (И ВГ, И МС) ==========
     function renderCardViewPayload(data) {
       const container = document.getElementById('cardViewContent');
       let html = `<div class="card-view-container">`;
@@ -978,7 +1094,6 @@
         btn.classList.add('sent');
       }
 
-      // Показываем заглушку загрузки на время ожидания ответа сервера
       showLoader("Генерация результата...");
 
       try {
