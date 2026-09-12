@@ -108,7 +108,8 @@
       align-items: center;
     }
 
-    .slots-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 8px; }
+    .slots-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 8px; }
+    .slot-wrapper { display: flex; flex-direction: column; gap: 4px; }
     .slot-item {
       aspect-ratio: 1 / 1;
       background-color: var(--card-bg);
@@ -134,13 +135,25 @@
       left: 0;
       right: 0;
       background: rgba(0, 0, 0, 0.85);
-      font-size: 9px;
+      font-size: 8px;
       text-align: center;
       padding: 2px 1px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       color: #fff;
+    }
+
+    .talisman-select {
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text);
+      font-size: 9px;
+      border-radius: 6px;
+      padding: 2px;
+      outline: none;
+      text-align: center;
     }
 
     .search-box { margin: 8px 0; }
@@ -508,7 +521,7 @@
       </div>
     </div>
 
-    <div class="footer-version">@sverh_alpha_bot • v2.3.7</div>
+    <div class="footer-version">@sverh_alpha_bot • v2.4.4</div>
   </div>
 
   <div id="page-vg-targets" class="page">
@@ -537,11 +550,31 @@
       </div>
 
       <div class="slots-grid" id="slots">
-        <div class="slot-item">1</div>
-        <div class="slot-item">2</div>
-        <div class="slot-item">3</div>
-        <div class="slot-item">4</div>
-        <div class="slot-item">5</div>
+        <div class="slot-wrapper">
+          <div class="slot-item">1</div>
+          <select class="talisman-select" id="tal1_1" disabled><option value="0">Талисман 1</option></select>
+          <select class="talisman-select" id="tal1_2" disabled><option value="0">Талисман 2</option></select>
+        </div>
+        <div class="slot-wrapper">
+          <div class="slot-item">2</div>
+          <select class="talisman-select" id="tal2_1" disabled><option value="0">Талисман 1</option></select>
+          <select class="talisman-select" id="tal2_2" disabled><option value="0">Талисман 2</option></select>
+        </div>
+        <div class="slot-wrapper">
+          <div class="slot-item">3</div>
+          <select class="talisman-select" id="tal3_1" disabled><option value="0">Талисман 1</option></select>
+          <select class="talisman-select" id="tal3_2" disabled><option value="0">Талисман 2</option></select>
+        </div>
+        <div class="slot-wrapper">
+          <div class="slot-item">4</div>
+          <select class="talisman-select" id="tal4_1" disabled><option value="0">Талисман 1</option></select>
+          <select class="talisman-select" id="tal4_2" disabled><option value="0">Талисман 2</option></select>
+        </div>
+        <div class="slot-wrapper">
+          <div class="slot-item">5</div>
+          <select class="talisman-select" id="tal5_1" disabled><option value="0">Талисман 1</option></select>
+          <select class="talisman-select" id="tal5_2" disabled><option value="0">Талисман 2</option></select>
+        </div>
       </div>
     </div>
 
@@ -850,7 +883,6 @@
       { name: "Джу",                classes: ["Стрелок"], img: "images/джу.png" },
       { name: "Дориан",             classes: ["Целитель", "Поддержка"], img: "images/дориан.png" },
       { name: "Дрейн",              classes: ["Маг", "Контроль"], img: "images/дрейн.png" },
-      { name: "Ева",                classes: ["Боец", "Поддержка"], img: "images/ева.png" },
       { name: "Зири",               classes: ["Танк"], img: "images/зири.png" },
       { name: "Исмаил",             classes: ["Боец"], img: "images/исмаил.png" },
       { name: "Йорген",             classes: ["Контроль", "Поддержка"], img: "images/йорген.png" },
@@ -963,7 +995,7 @@
           if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
           return;
         }
-        selectedHeroes.push(hero);
+        selectedHeroes.push({ ...hero, tal1: 0, tal2: 0 });
       }
       updateUI();
     }
@@ -972,20 +1004,35 @@
       countEl.textContent = selectedHeroes.length;
       resetBtn.style.display = selectedHeroes.length > 0 ? 'inline' : 'none';
 
-      const slots = slotsEl.children;
       for (let i = 0; i < 5; i++) {
+        const slotWrapper = slotsEl.children[i];
+        const slotItem = slotWrapper.querySelector('.slot-item');
+        const talSelect1 = slotWrapper.querySelector(`#tal${i+1}_1`);
+        const talSelect2 = slotWrapper.querySelector(`#tal${i+1}_2`);
+
         if (selectedHeroes[i]) {
           const h = selectedHeroes[i];
-          slots[i].className = 'slot-item filled';
-          slots[i].innerHTML = `
+          slotItem.className = 'slot-item filled';
+          slotItem.innerHTML = `
             <img src="${encodeURI(h.img)}" alt="${h.name}">
             <div class="slot-name">${h.name}</div>
           `;
-          slots[i].onclick = () => toggleHero(h);
+          slotItem.onclick = () => toggleHero(h);
+
+          talSelect1.disabled = false;
+          talSelect2.disabled = false;
+
+          // Загружаем доступные талисманы для этого героя
+          loadTalismansForHero(h.name, talSelect1, talSelect2, h);
         } else {
-          slots[i].className = 'slot-item';
-          slots[i].innerHTML = `${i + 1}`;
-          slots[i].onclick = null;
+          slotItem.className = 'slot-item';
+          slotItem.innerHTML = `${i + 1}`;
+          slotItem.onclick = null;
+
+          talSelect1.innerHTML = '<option value="0">Талисман 1</option>';
+          talSelect1.disabled = true;
+          talSelect2.innerHTML = '<option value="0">Талисман 2</option>';
+          talSelect2.disabled = true;
         }
       }
 
@@ -998,6 +1045,47 @@
       }
 
       renderHeroes(searchInput.value);
+    }
+
+    async function loadTalismansForHero(heroName, select1, select2, heroObj) {
+      try {
+        const response = await fetch(SERVER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'get_talismans', hero_name: heroName, user_id: getUserId() })
+        });
+        const data = await response.json();
+        if (data.ok && data.talismans) {
+          let optionsHtml = '<option value="0">Любой талисман</option>';
+          data.talismans.forEach(t => {
+            optionsHtml += `<option value="${t.id}">${t.name} (${t.color})</option>`;
+          });
+
+          const val1 = select1.value;
+          const val2 = select2.value;
+
+          select1.innerHTML = optionsHtml;
+          select2.innerHTML = optionsHtml;
+
+          select1.value = val1;
+          select2.value = val2;
+
+          heroObj.tal1 = parseInt(select1.value) || 0;
+          heroObj.tal2 = parseInt(select2.value) || 0;
+        }
+      } catch (e) {
+        console.error("Error loading talismans:", e);
+      }
+    }
+
+    // Слушатели изменения селектов талисманов
+    for (let i = 1; i <= 5; i++) {
+      document.getElementById(`tal${i}_1`).addEventListener('change', (e) => {
+        if (selectedHeroes[i-1]) selectedHeroes[i-1].tal1 = parseInt(e.target.value) || 0;
+      });
+      document.getElementById(`tal${i}_2`).addEventListener('change', (e) => {
+        if (selectedHeroes[i-1]) selectedHeroes[i-1].tal2 = parseInt(e.target.value) || 0;
+      });
     }
 
     function getHeroBgClass(marker) {
@@ -1031,7 +1119,11 @@
             action: 'find_pack_data',
             user_id: getUserId(),
             init_data: tg?.initData || '',
-            heroes: selectedHeroes.map(h => h.name)
+            heroes: selectedHeroes.map(h => ({
+              name: h.name,
+              tal1: h.tal1 || 0,
+              tal2: h.tal2 || 0
+            }))
           })
         });
 
