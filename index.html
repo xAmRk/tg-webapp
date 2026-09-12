@@ -521,7 +521,7 @@
       </div>
     </div>
 
-    <div class="footer-version">@sverh_alpha_bot • v2.4.7</div>
+    <div class="footer-version">@sverh_alpha_bot • v2.6.5</div>
   </div>
 
   <div id="page-vg-targets" class="page">
@@ -1046,7 +1046,7 @@
         if (data.ok && data.talismans) {
           let optionsHtml = '<option value="0">Любой талисман</option>';
           data.talismans.forEach(t => {
-            optionsHtml += `<option value="${t.id}">${t.name} (${t.color})</option>`;
+            optionsHtml += `<option value="${t.id}">${t.name}</option>`;
           });
 
           const currentVal = selectEl.value;
